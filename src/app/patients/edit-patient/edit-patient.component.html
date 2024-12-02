@@ -1,0 +1,62 @@
+<div class="container-fluid">
+  <form (ngSubmit)="submitForm()" #patientForm="ngForm" class="patient-form">
+    <div class="row">
+      <div class="col">
+        <label for="name">Name:</label>
+        <input type="text" pInputText id="name" [(ngModel)]="editpatient.name" name="name" required />
+      </div>
+      <div class="col">
+        <label for="nationalno">National No:</label>
+        <input type="text" pInputText id="nationalno" [(ngModel)]="editpatient.nationalno" name="nationalno" required />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label for="mobileno">Mobile No:</label>
+        <input id="mobileno" type="text" pInputText [(ngModel)]="editpatient.mobileno" name="mobileno" required />
+      </div>
+      <div class="col">
+        <label for="dob">Date of Birth:</label>
+        <p-calendar id="dob" name="dob" [(ngModel)]="editpatient.dob" [showIcon]="true" dateFormat="mm-dd-yy"
+          (onSelect)="onDateChange($event)" [style]="{'width':  '100%' }">
+        </p-calendar>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <button pButton type="button" icon="pi pi-camera" (click)="openCamera()"
+          pTooltip="openCamera"></button>
+        <button pButton type="button" label="Capture Image" (click)="captureImage()" pTooltip="captureImage" class="mx-3"
+          [disabled]="!patientForm.valid"></button>  
+      </div>
+      <div class="col">
+        <canvas #canvasElement class="w-100"></canvas>
+      </div>
+    </div>
+    <div class="row" class="float-end mt-2">
+      <p-button label="Save" type="submit" icon="pi pi-check" iconPos="right"></p-button>
+
+      <!-- <p-button type="submit"  pTooltip="Save"  icon="pi pi-check"></p-button> -->
+    </div>
+    <video #videoElement width="640" height="480" style="display:none;"></video>
+  </form>
+  <p-dialog appendTo="body" modal="true" [(visible)]="showSuccessfullyMessage">
+    <ng-template pTemplate="header">
+      <h6 style="color: #04527e; font-weight: bold; font-size: 16pt;">
+        {{ SuccessfullyHeader }}
+      </h6>
+    </ng-template>
+    <span style="color: green; font-weight: bold; font-size: 12pt; text-align: center;">
+      {{ SuccessfullyMessage }}
+    </span>
+  </p-dialog>
+
+  <p-dialog appendTo="body" modal="true" [(visible)]="errorDisplay" [style]="{ width: '350px' }">
+    <ng-template pTemplate="header">
+      <h6 style="color: rgb(181, 4, 4);">Error</h6>
+    </ng-template>
+    <span style="color: rgb(181, 4, 4); font-weight: bold;">
+      {{ errorMessage }}
+    </span>
+  </p-dialog>
+</div>

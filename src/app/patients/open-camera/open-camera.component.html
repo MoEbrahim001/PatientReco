@@ -1,0 +1,13 @@
+<div class="popup-container">
+  <div class="video-container">
+    <video  #videoElement autoplay></video>
+    <canvas #canvasElement class="overlay-canvas"></canvas>
+  </div>
+
+  <div class="button-container">
+    <button class="capture-button" (click)="captureAndDetectFace()">Capture Image</button>
+    <button class="cancel-button" (click)="stopCameraAndRedirect()">Cancel</button>
+ 
+  </div>
+</div>
+

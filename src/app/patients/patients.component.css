@@ -1,0 +1,105 @@
+.form{
+  margin-left: 1.2rem;
+}
+/* Centering the table */
+.table-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /*height: 70vh;  Full height of the viewport */
+  /*width: 100vw;  Full width of the viewport */
+  padding: 20px;
+  box-sizing: border-box; /* Ensure padding doesn’t affect width */
+}
+
+/* CSS to make the table take full width */
+table {
+  width: 100%; /* Table will cover full width inside container */
+  border-collapse: collapse; /* For better visual appearance */
+}
+.button-spacing {
+  margin-right: 10px;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+th {
+  background-color: #f4f4f4;
+}
+
+.no-patients-message {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.p-dialog-header .ng-tns-c4042076560-1 .ng-star-inserted{
+padding: 0px !important;
+}
+/* General Styling */
+.container-fluid {
+  padding: 1rem;
+}
+
+.table-container {
+  margin-top: 1rem;
+}
+
+.action-icon {
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.camera-feed {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Pop-up Styling
+.popup-header {
+  color: #04527e;
+  font-weight: bold;
+  font-size: 16pt;
+  text-align: center;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.btn-capture {
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+}
+
+.btn-capture:hover {
+  background-color: #45a049;
+}
+
+.btn-cancel {
+  background-color: #f44336;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+}
+
+.btn-cancel:hover {
+  background-color: #d32f2f;
+} */

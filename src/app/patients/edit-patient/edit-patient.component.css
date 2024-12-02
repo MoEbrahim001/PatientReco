@@ -1,0 +1,31 @@
+/* .form-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  } */
+  
+  /* .patient-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  } */
+  
+  .patient-form input, 
+  .patient-form p-calendar {
+    width: 100%;
+    /* padding: 8px; */
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* .button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  } */
+  

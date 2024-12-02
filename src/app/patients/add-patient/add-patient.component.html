@@ -1,0 +1,48 @@
+<div class="container-fluid">
+<form (ngSubmit)="submitForm()" #patientForm="ngForm" class="patient-form">
+  <div class="row">
+    <div class="col">
+      <label for="name">Name:</label>
+      <input type="text" [(ngModel)]="patientData.name" name="name" required />
+    </div>
+    <div class="col">
+      <label for="dob">Date of Birth:</label>
+      <input type="date" [(ngModel)]="dob" (change)="onDateChange($event)" name="dob" required />
+    </div>
+  </div>
+    <div class="row">
+      <div class="col">
+        <label for="mobileNo">Mobile Number:</label>
+        <input type="text" [(ngModel)]="patientData.mobileno" name="mobileNo" required />
+      </div>
+      <!-- <div class="row"> -->
+      <div class="col">
+        <label for="nationalNo">National Number:</label>
+        <input type="text" [(ngModel)]="patientData.nationalno" name="nationalNo" required />
+      </div>
+    </div>
+      <div class="row">
+        <div class="col">
+          <!-- Open Camera button with space to the right -->
+          <button pButton type="button" icon="pi pi-camera" label="" (click)="openCamera()" style="margin-right: 10px;"
+            pTooltip="openCamera"></button>
+          <!-- Capture Image button -->
+          <button pButton type="button" label="Capture Image" (click)="captureImage()" [disabled]="!patientForm.valid"
+            pTooltip="captureImage"></button>
+        </div>
+        <div class="col">
+          <canvas #canvasElement class="w-100"></canvas>
+        </div>
+      </div>
+      <div class="row" class="float-end mt-2">
+        <button pButton type="submit" icon="pi pi-user-plus" label="Add Patient" pTooltip="Add"></button>
+      </div>
+      <video #videoElement width="640" height="480" style="display:none;"></video>
+    <p-dialog appendTo="body" modal="true" [(visible)]="errorDisplay" [style]="{ width: '350px' }">
+      <ng-template pTemplate="header">
+        <h6 style="color: rgb(181, 4, 4);">Error</h6>
+      </ng-template>
+      <span style="color: rgb(181, 4, 4); font-weight: bold;">
+        {{ errorMessage }}
+      </span>
+    </p-dialog>

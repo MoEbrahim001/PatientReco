@@ -1,0 +1,18 @@
+<div>
+    <!-- Button to Open Camera -->
+    <button (click)="openCamera()">Open Camera</button>
+  
+    <!-- Video Stream for Camera -->
+    <video #videoElement autoplay></video>
+  
+    <!-- Face Detection Indicator -->
+    <canvas #canvasElement></canvas>
+  
+    <!-- Form for Patient Information -->
+    <form>
+      <label>Patient Name: <input [(ngModel)]="patientName" name="name" /></label>
+      <!-- Add more fields as necessary -->
+      <button (click)="captureAndSave()">Capture and Save</button>
+    </form>
+  </div>
+  

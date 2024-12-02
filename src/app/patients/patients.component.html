@@ -1,0 +1,113 @@
+<div class="container-fluid mt-5">
+  <div class="row ms-1">
+    <div class="col-2">
+      <input type="text" pInputText [(ngModel)]="searchText" (input)="onSearch()"
+      placeholder="Search by Name or Mobile Number" class="w-100"/>
+    </div>
+    <div class="col-auto d-flex align-items-center">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-camera"
+        label="openCamera"
+        (click)="openCamera()"
+        class="me-2"
+      ></button>    
+    </div>
+    <div class="col-1">
+      <p-button icon="pi pi-plus" (click)="onAdd()" [rounded]="true" [text]="true"
+        [style]="{ marginLeft: '0.5rem' }"></p-button>
+      </div>
+    
+      
+  </div>
+ <div class="row">
+    <div *ngIf="patients.length > 0" class="table-container">
+      <table class="table table-stripped">
+        <thead>
+          <tr>
+            <th style="text-align: center;">ID</th>
+            <th style="text-align: center;">Image</th>
+            <th style="text-align: center;">Name</th>
+            <th style="text-align: center;">Mobile No</th>
+            <th style="text-align: center;">Date of Birth</th>
+            <th style="text-align: center;">National No</th>
+            <th style="text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let patient of patients">
+            <td>{{ patient.id }}</td>
+            <td style="text-align: center;">
+              <img *ngIf="patient.faceImg" [src]="patient.faceImg" alt="Face Image" width="50" height="50"
+                style="border-radius: 50%; object-fit: cover;" />
+            </td>
+            <td style="text-align: center;">{{ patient.name }}</td>
+            <td style="text-align: center;">{{ patient.mobileno }}</td>
+            <td style="text-align: center;">{{ patient.dob | date:'dd-MM-yyyy' }}</td>
+            <td style="text-align: center;">{{ patient.nationalno }}</td>
+            <td>
+
+              <span (click)="onEdit(patient)" class="button-spacing" pTooltip="Edit">
+                <i style="color: rgb(136, 0, 255); font-size: 20px; cursor: pointer;" class="pi pi-pencil"></i>
+              </span>
+
+              <span (click)="confirmDelete(patient)" pTooltip="Delete " tooltipPosition="left">
+                <i style="color: red; font-size: 20px; cursor: pointer;" class="pi pi-trash"></i>
+              </span>
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div> 
+  <div class="row">
+    <div class="col-sm-12 col-md-2">
+      <!-- <div class="d-flex justify-content-evenly">
+          <button pButton type="button" icon="pi pi-camera" label="" (click)="openCamera()" 
+          pTooltip="openCamera"></button>
+          <button pButton type="button" label="Capture Image" (click)="captureAndDetectFace()"
+          pTooltip="captureImage"></button>
+      </div> -->
+    </div>
+    
+    <div class="col-sm-12 col-md-3">
+      <canvas #canvasElement class="w-100"></canvas>
+    </div>
+  </div>
+  <video #videoElement width="640" height="480" style="display:none;"></video>
+</div> 
+
+
+<div *ngIf="patients.length === 0 && searchText" class="no-patients-message">
+  <p>No patients found matching "{{ searchText }}".</p>
+  
+  
+</div>
+
+
+
+<p-confirmDialog width="300px"></p-confirmDialog>
+<!-- <p-dialog  header="Header" [(visible)]="showSuccessfullyMessage" [style]="{width: '50vw'}"> -->
+<p-dialog header="Header" [(visible)]="showSuccessfullyMessage" [style]="{width: '50vw'}" [maximizable]="true">
+
+  <ng-template pTemplate="header">
+    <h6 style="color: #04527e; font-weight: bold; font-size: 16pt;">
+      {{ SuccessfullyHeader }}
+    </h6>
+  </ng-template>
+  <span style="color: green; font-weight: bold; font-size: 12pt; text-align: center;">
+    {{ SuccessfullyMessage }}
+  </span>
+</p-dialog>
+
+<!-- Error Dialog -->
+<p-dialog appendTo="body" modal="true" [(visible)]="errorDisplay" [style]="{ width: '350px' }">
+  <ng-template pTemplate="header">
+    <h6 style="color: rgb(181, 4, 4);">Error</h6>
+  </ng-template>
+  <span style="color: rgb(181, 4, 4); font-weight: bold;">
+    {{ errorMessage }}
+  </span>
+</p-dialog>
