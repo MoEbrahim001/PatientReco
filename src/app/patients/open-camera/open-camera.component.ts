@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild  } from '@angular/core';
 import { Router } from '@angular/router'; // Import the Router to handle navigation
 import { Camera } from '@mediapipe/camera_utils';
-
+import { HttpClient } from '@angular/common/http';
 import { FaceDetection, Results } from '@mediapipe/face_detection'; 
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 
@@ -21,7 +21,7 @@ export class OpenCameraComponent implements OnInit {
   faceDetection: FaceDetection | null = null;
   boundingBox: { x: number; y: number; width: number; height: number } | null = null;
 
-  constructor(private router: Router,private ref:DynamicDialogRef) {} // Inject Router for navigation
+  constructor(private router: Router,private ref:DynamicDialogRef, private http:HttpClient) {} // Inject Router for navigation
 
   ngOnInit(): void {
 
@@ -131,23 +131,18 @@ export class OpenCameraComponent implements OnInit {
 
   }
   async captureAndDetectFace() {
-    // Convert canvas to a Blob and send to backend
     const canvas = this.canvasElement.nativeElement;
     canvas.toBlob(async (blob) => {
       if (blob) {
         const formData = new FormData();
         formData.append('file', blob, 'face_image.png');
-
+  
         // Make API call to send captured image
         try {
-          const response = await fetch('https://localhost:7266/api/Patients/detectAndFind', {
-            method: 'POST',
-            body: formData,
-          });
-          const result = await response.json();
-          console.log(result);
-          if (result.isMatch) {
-            alert(`Patient Found`);
+          const response = await this.http.post('http://127.0.0.1:5000/detectAndFind', formData).toPromise();
+          console.log(response);
+          if (response['isMatch']) {
+            alert(`Patient Found: ${response['patientName']}`);
           } else {
             alert('No matching patient found.');
           }
