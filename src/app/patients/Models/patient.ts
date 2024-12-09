@@ -10,6 +10,17 @@ export class ListPatients {
 
 
 }
+export class detectAndFindres
+{
+    isMatch:boolean;
+    patientData:ListPatients;
+    patientName:string;
+    
+
+
+
+
+}
 export class viewPatient {
     id: number;
     name: string; // Use camelCase for consistency

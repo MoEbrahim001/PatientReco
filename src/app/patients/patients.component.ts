@@ -68,7 +68,7 @@ export class PatientsComponent implements OnInit {
       this.patients = data;
       console.log("p empty:",this.patients.length==0);
       console.log("p empty:",this.patients)
-      
+      console.log("this.patients ",this.patients);
 
 
       
@@ -103,7 +103,14 @@ export class PatientsComponent implements OnInit {
     const refDialog = this.dialogService.open(OpenCameraComponent, {
       header: "camer popup",
     });
-    refDialog.onClose.subscribe(()=>{
+    refDialog.onClose.subscribe(( patient )=>{
+      if(patient)
+      {
+        console.log(" this.patient ", patient );
+        this.patients=[];
+        this.patients.push(patient)
+      }
+   
       if (this.videoStream) {
         this.videoStream.getTracks().forEach(track => track.stop()); // Stop all tracks (video)
         this.videoStream = null;

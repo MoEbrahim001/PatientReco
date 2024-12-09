@@ -4,6 +4,7 @@ import { Camera } from '@mediapipe/camera_utils';
 import { HttpClient } from '@angular/common/http';
 import { FaceDetection, Results } from '@mediapipe/face_detection'; 
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { detectAndFindres, ListPatients } from '../Models/patient';
 
 @Component({
   selector: 'app-open-camera',
@@ -16,6 +17,7 @@ export class OpenCameraComponent implements OnInit {
   @ViewChild('canvasElement', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
   videoStream: MediaStream | null = null;
   private camera: Camera;
+  patient:ListPatients
 
   blob:Blob;
   faceDetection: FaceDetection | null = null;
@@ -136,13 +138,26 @@ export class OpenCameraComponent implements OnInit {
       if (blob) {
         const formData = new FormData();
         formData.append('file', blob, 'face_image.png');
-  
+    
         // Make API call to send captured image
         try {
-          const response = await this.http.post('http://127.0.0.1:5000/detectAndFind', formData).toPromise();
+          const response = await this.http.post<detectAndFindres>('http://127.0.0.1:5000/detectAndFind', formData).toPromise();
           console.log(response);
+           this.patient = response.patientData
+           this.patient.name=response.patientName
+           
           if (response['isMatch']) {
-            alert(`Patient Found: ${response['patientName']}`);
+            this.ref.close(this.patient)
+            // const patientData = response['patientData'];  // Extract patient data from response
+            // const patientDetails = `
+            //   Patient Found: ${response['patientName']}\n
+            //   Dob: ${patientData['Dob']}\n
+            //   Mobile No: ${patientData['Mobileno']}\n
+            //   Patient ID: ${patientData['PatientId']}\n
+            //   National No: ${patientData['NationalNo']}\n
+            //   Face Image: ${patientData['FaceImg']}
+            // `;
+            // alert(patientDetails);  // Display full patient information
           } else {
             alert('No matching patient found.');
           }
@@ -152,6 +167,8 @@ export class OpenCameraComponent implements OnInit {
       }
     }, 'image/png');
   }
+  
+  
   captureImage(): void {
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
