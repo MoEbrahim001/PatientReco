@@ -26,7 +26,6 @@ export class OpenCameraComponent implements OnInit {
   constructor(private router: Router,private ref:DynamicDialogRef, private http:HttpClient) {} // Inject Router for navigation
 
   ngOnInit(): void {
-
     // Accessing the camera stream and initializing video element
     navigator.mediaDevices.getUserMedia({
       video: true
@@ -39,64 +38,76 @@ export class OpenCameraComponent implements OnInit {
       console.error('Error accessing camera:', error);
     });
   }
-
+  
   initFaceDetection(): void {
     // Initialize face detection using Mediapipe
     this.faceDetection = new FaceDetection({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
     });
-
+  
     this.faceDetection.setOptions({
       model: 'short',
       minDetectionConfidence: 0.5,
     });
-
+  
     this.faceDetection.onResults((results: any) => {
       this.drawFaceBoundaries(results);
     });
-
+  
     this.processVideo();
   }
-
+  
   processVideo(): void {
     const video = this.videoElement.nativeElement;
     let frameCount = 0;
-
-    // Request next frame for processing
-    const process = () => {
+  
+    const process = async () => {
       if (this.faceDetection) {
         try {
           if (frameCount % 10 === 0) {
-            this.faceDetection.send({ image: video });
+            await this.faceDetection.send({ image: video });
           }
           frameCount++;
         } catch (error) {
           console.error('Error in face detection:', error);
         }
       }
-      requestAnimationFrame(process);
+  
+      // Add a slight delay for better performance
+      setTimeout(() => requestAnimationFrame(process), 10);
     };
-
+  
+    // Start the processing loop
     process();
   }
-
+  
+  ngOnDestroy(): void {
+    // Stop the video stream and clean up resources
+    if (this.videoStream) {
+      this.videoStream.getTracks().forEach(track => track.stop());
+    }
+    if (this.faceDetection) {
+      this.faceDetection.close();
+    }
+  }
+  
   drawFaceBoundaries(results: Results): void {
     const canvas = this.canvasElement.nativeElement;
     const ctx = canvas.getContext('2d');
-
+  
     if (!ctx || !results.detections) {
       return;
     }
-
+  
     // Set canvas size to match video size
     canvas.width = this.videoElement.nativeElement.videoWidth;
     canvas.height = this.videoElement.nativeElement.videoHeight;
-
+  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(this.videoElement.nativeElement, 0, 0, canvas.width, canvas.height);
-
+  
     this.boundingBox = null; // Reset bounding box
-
+  
     // Draw bounding box for each detected face
     results.detections.forEach((detection) => {
       const boundingBox = detection.boundingBox;
@@ -108,7 +119,7 @@ export class OpenCameraComponent implements OnInit {
         boundingBox.width * canvas.width,
         boundingBox.height * canvas.height
       );
-
+  
       this.boundingBox = {
         x: boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
         y: boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
@@ -117,6 +128,7 @@ export class OpenCameraComponent implements OnInit {
       };
     });
   }
+  
 
   // Method to stop the camera and navigate to the patients' page
   stopCameraAndRedirect(): void {

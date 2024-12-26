@@ -69,20 +69,126 @@ export class EditPatientComponent implements OnInit {
 
 
   openCamera(): void {
-    navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      }
-    }).then((stream) => {
-      this.videoStream = stream;
-      this.videoElement.nativeElement.srcObject = stream;
-      this.videoElement.nativeElement.play();
-      this.initFaceDetection();
-    }).catch((error) => {
-      console.error('Error accessing camera:', error);
+    // Ensure the camera isn't reopened if already active
+    if (this.videoStream) {
+      console.warn('Camera is already open.');
+      return;
+    }
+  
+    navigator.mediaDevices
+      .getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
+      .then((stream) => {
+        this.videoStream = stream;
+        this.videoElement.nativeElement.srcObject = stream;
+        this.videoElement.nativeElement.play();
+        this.initFaceDetection();
+      })
+      .catch((error) => {
+        console.error('Error accessing camera:', error);
+      });
+  }
+  
+  initFaceDetection(): void {
+    this.faceDetection = new FaceDetection({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`,
+    });
+  
+    // Set options for face detection
+    this.faceDetection.setOptions({
+      model: 'short',
+      minDetectionConfidence: 0.5,
+    });
+  
+    // Handle detection results
+    this.faceDetection.onResults((results: Results) => this.drawFaceBoundaries(results));
+  
+    // Start processing video frames
+    this.processVideo();
+  }
+  
+  drawFaceBoundaries(results: Results): void {
+    const canvas = this.canvasElement.nativeElement;
+    const ctx = canvas.getContext('2d');
+  
+    if (!ctx || !results.detections) {
+      return;
+    }
+  
+    // Match canvas size to video element
+    canvas.width = this.videoElement.nativeElement.videoWidth;
+    canvas.height = this.videoElement.nativeElement.videoHeight;
+  
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    // Draw video frame to canvas
+    ctx.drawImage(this.videoElement.nativeElement, 0, 0, canvas.width, canvas.height);
+  
+    // Reset bounding box
+    this.boundingBox = null;
+  
+    // Draw bounding boxes for each detected face
+    results.detections.forEach((detection) => {
+      const boundingBox = detection.boundingBox;
+  
+      ctx.strokeStyle = '#00FF00'; // Green bounding box
+      ctx.lineWidth = 3; // Thickness of the bounding box
+      ctx.strokeRect(
+        boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
+        boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
+        boundingBox.width * canvas.width,
+        boundingBox.height * canvas.height
+      );
+  
+      // Save bounding box details
+      this.boundingBox = {
+        x: boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
+        y: boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
+        width: boundingBox.width * canvas.width,
+        height: boundingBox.height * canvas.height,
+      };
     });
   }
+  
+  processVideo(): void {
+    const video = this.videoElement.nativeElement;
+    let frameCount = 0;
+  
+    const process = () => {
+      if (this.faceDetection) {
+        try {
+          // Process every 10th frame for efficiency
+          if (frameCount % 10 === 0) {
+            this.faceDetection.send({ image: video });
+          }
+          frameCount++;
+        } catch (error) {
+          console.error('Error in face detection:', error);
+        }
+      }
+  
+      // Slight delay for smoother processing
+      setTimeout(() => requestAnimationFrame(process), 50);
+    };
+  
+    process();
+  }
+  
+  ngOnDestroy(): void {
+    // Stop video stream and release resources
+    if (this.videoStream) {
+      this.videoStream.getTracks().forEach((track) => track.stop());
+      this.videoStream = null;
+    }
+  
+    // Close face detection instance if initialized
+    if (this.faceDetection) {
+      this.faceDetection.close();
+      this.faceDetection = null;
+    }
+  }
+
+  
   onDateChange(event: any) {
     const formattedDate = this.datePipe.transform(event, 'MM-dd-yyyy');
     console.log('Formatted date:', formattedDate);
@@ -98,79 +204,7 @@ export class EditPatientComponent implements OnInit {
   //   console.log("date change");
 
   // }
-  initFaceDetection(): void {
-    this.faceDetection = new FaceDetection({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
-    });
-
-    this.faceDetection.setOptions({
-      model: 'short',
-      minDetectionConfidence: 0.5,
-    });
-
-    this.faceDetection.onResults((results: Results) => {
-      this.drawFaceBoundaries(results);
-    });
-
-    this.processVideo();
-  }
-
-  drawFaceBoundaries(results: Results): void {
-    const canvas = this.canvasElement.nativeElement;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx || !results.detections) {
-      return;
-    }
-
-    canvas.width = this.videoElement.nativeElement.videoWidth;
-    canvas.height = this.videoElement.nativeElement.videoHeight;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(this.videoElement.nativeElement, 0, 0, canvas.width, canvas.height);
-
-    this.boundingBox = null; // Reset bounding box
-
-    results.detections.forEach((detection) => {
-      const boundingBox = detection.boundingBox;
-      ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
-        boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
-        boundingBox.width * canvas.width,
-        boundingBox.height * canvas.height
-      );
-
-      this.boundingBox = {
-        x: boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
-        y: boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
-        width: boundingBox.width * canvas.width,
-        height: boundingBox.height * canvas.height
-      };
-    });
-  }
-
-  processVideo(): void {
-    const video = this.videoElement.nativeElement;
-    let frameCount = 0;
-
-    const process = () => {
-      if (this.faceDetection) {
-        try {
-          if (frameCount % 10 === 0) {
-            this.faceDetection.send({ image: video });
-          }
-          frameCount++;
-        } catch (error) {
-          console.error('Error in face detection:', error);
-        }
-      }
-      requestAnimationFrame(process);
-    };
-
-    process();
-  }
+  
 
   // onSave(): void {
   //   const formData = new FormData();
