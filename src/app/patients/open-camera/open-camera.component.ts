@@ -26,44 +26,64 @@ export class OpenCameraComponent implements OnInit {
   constructor(private router: Router,private ref:DynamicDialogRef, private http:HttpClient) {} // Inject Router for navigation
 
   ngOnInit(): void {
-    // Accessing the camera stream and initializing video element
-    navigator.mediaDevices.getUserMedia({
-      video: true
-    }).then((stream) => {
-      this.videoStream = stream;
-      this.videoElement.nativeElement.srcObject = stream;
-      this.videoElement.nativeElement.play();
-      this.initFaceDetection();
-    }).catch((error) => {
-      console.error('Error accessing camera:', error);
-    });
+    // Access the camera stream and initialize the video element
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        console.log('Camera stream started.');
+        this.videoStream = stream;
+        this.videoElement.nativeElement.srcObject = stream;
+        this.videoElement.nativeElement.play();
+
+        // Delay initialization of face detection to ensure resources are ready
+        setTimeout(() => {
+          this.initFaceDetection();
+        }, 500);
+      })
+      .catch((error) => {
+        console.error('Error accessing camera:', error);
+      });
   }
-  
   initFaceDetection(): void {
-    // Initialize face detection using Mediapipe
+    // Prevent reinitialization of face detection
+    if (this.faceDetection) {
+      console.warn('FaceDetection is already initialized.');
+      return;
+    }
+
+    console.log('Initializing FaceDetection...');
     this.faceDetection = new FaceDetection({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
     });
-  
+
     this.faceDetection.setOptions({
-      model: 'short',
+      model: 'short', // Use the short-range model
       minDetectionConfidence: 0.5,
     });
-  
+
     this.faceDetection.onResults((results: any) => {
+     
       this.drawFaceBoundaries(results);
     });
-  
+
+    console.log('FaceDetection initialized.');
     this.processVideo();
   }
   
   processVideo(): void {
     const video = this.videoElement.nativeElement;
+
+    // Check if video element is ready
+    if (!video || !video.readyState) {
+      console.warn('Video element is not ready yet.');
+      return;
+    }
+
     let frameCount = 0;
-  
+
     const process = async () => {
       if (this.faceDetection) {
         try {
+          // Send every 10th frame for face detection
           if (frameCount % 10 === 0) {
             await this.faceDetection.send({ image: video });
           }
@@ -72,54 +92,46 @@ export class OpenCameraComponent implements OnInit {
           console.error('Error in face detection:', error);
         }
       }
-  
+
       // Add a slight delay for better performance
       setTimeout(() => requestAnimationFrame(process), 10);
     };
-  
+
     // Start the processing loop
     process();
   }
-  
-  ngOnDestroy(): void {
-    // Stop the video stream and clean up resources
-    if (this.videoStream) {
-      this.videoStream.getTracks().forEach(track => track.stop());
-    }
-    if (this.faceDetection) {
-      this.faceDetection.close();
-    }
-  }
-  
+
   drawFaceBoundaries(results: Results): void {
     const canvas = this.canvasElement.nativeElement;
     const ctx = canvas.getContext('2d');
-  
+
     if (!ctx || !results.detections) {
+      console.warn('No detections or canvas context.');
       return;
     }
-  
+
     // Set canvas size to match video size
     canvas.width = this.videoElement.nativeElement.videoWidth;
     canvas.height = this.videoElement.nativeElement.videoHeight;
-  
+
+    // Clear the canvas and draw the video frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(this.videoElement.nativeElement, 0, 0, canvas.width, canvas.height);
-  
+
     this.boundingBox = null; // Reset bounding box
-  
-    // Draw bounding box for each detected face
+
+    // Draw bounding boxes for detected faces
     results.detections.forEach((detection) => {
       const boundingBox = detection.boundingBox;
-      ctx.strokeStyle = '#00FF00'; // Set border color
-      ctx.lineWidth = 3; // Set line width for bounding box
+      ctx.strokeStyle = '#00FF00'; // Green border for bounding box
+      ctx.lineWidth = 3;
       ctx.strokeRect(
         boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
         boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
         boundingBox.width * canvas.width,
         boundingBox.height * canvas.height
       );
-  
+
       this.boundingBox = {
         x: boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
         y: boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
@@ -128,6 +140,29 @@ export class OpenCameraComponent implements OnInit {
       };
     });
   }
+
+  ngOnDestroy(): void {
+    console.log('Cleaning up resources...');
+    // Stop the video stream
+    if (this.videoStream) {
+      this.videoStream.getTracks().forEach((track) => track.stop());
+      console.log('Camera stream stopped.');
+    }
+
+    // Clean up the face detection object
+    if (this.faceDetection) {
+      this.faceDetection.reset(); // Reset resources
+      this.faceDetection.close(); // Properly close the Mediapipe object
+      this.faceDetection = null;  // Prevent further access
+      console.log('FaceDetection cleaned up.');
+    }
+
+    // Stop the video element
+    const video = this.videoElement.nativeElement;
+    video.pause();
+    video.srcObject = null;
+  }
+
   
 
   // Method to stop the camera and navigate to the patients' page
