@@ -90,8 +90,7 @@
 
 <p-confirmDialog width="300px"></p-confirmDialog>
 <!-- <p-dialog  header="Header" [(visible)]="showSuccessfullyMessage" [style]="{width: '50vw'}"> -->
-<p-dialog header="Header" [(visible)]="showSuccessfullyMessage" [style]="{width: '50vw'}" [maximizable]="true">
-
+<!-- <p-dialog header="Header" [modal]="true" [(visible)]="showSuccessfullyMessage" [style]="{width: '20vw'}" [maximizable]="true">
   <ng-template pTemplate="header">
     <h6 style="color: #04527e; font-weight: bold; font-size: 16pt;">
       {{ SuccessfullyHeader }}
@@ -100,8 +99,15 @@
   <span style="color: green; font-weight: bold; font-size: 12pt; text-align: center;">
     {{ SuccessfullyMessage }}
   </span>
+</p-dialog> -->
+<p-dialog appendTo="body" modal="true" [(visible)]="showSuccessfullyMessage">
+  <ng-template pTemplate="header">
+    <h6 style="color: #04527e; font-weight: bold; font-size: 16pt">
+      {{ SuccessfullyHeader }}
+    </h6>
+  </ng-template>
+  <span style="color: green; font-weight: bold; font-size: 12pt; text-align: center">{{ SuccessfullyMessage}}</span>
 </p-dialog>
-
 <!-- Error Dialog -->
 <p-dialog appendTo="body" modal="true" [(visible)]="errorDisplay" [style]="{ width: '350px' }">
   <ng-template pTemplate="header">
@@ -111,3 +117,7 @@
     {{ errorMessage }}
   </span>
 </p-dialog>
+
+
+
+

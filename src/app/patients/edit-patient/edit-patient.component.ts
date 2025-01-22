@@ -259,7 +259,32 @@ export class EditPatientComponent implements OnInit {
   // }
   submitForm(): void {
     console.log("Editpatient:", this.editpatient);
-    
+    console.log("date :" , this.editpatient.dobdate)
+    if(this.editpatient.name == '')
+    {
+      this.errorDisplay = true;
+      this.errorMessage = "Name is Required";
+      return;
+    }
+    if(this.editpatient.nationalno == '')
+      {
+        this.errorDisplay = true;
+        this.errorMessage = "National is Required";
+        return;
+      }
+      if(this.editpatient.mobileno == '')
+        {
+          this.errorDisplay = true;
+          this.errorMessage = "Mobile No is Required";
+          return;
+        }
+        
+        // if(this.editpatient.dob ==)
+        //   {
+        //     this.errorDisplay = true;
+        //     this.errorMessage = "Name is Required";
+        //     return;
+        //   }
     this.patientsService.updatePatient(this.editpatient).subscribe({
       next: (data) => {
         if (this.blob) {

@@ -171,6 +171,7 @@ export class AddPatientComponent implements AfterViewInit {
       }
     }
     
+    
 
   captureImage(): void {
     const video = this.videoElement.nativeElement;

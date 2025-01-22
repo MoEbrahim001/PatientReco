@@ -343,11 +343,12 @@ export class PatientsComponent implements OnInit {
       
       accept: () => {
         // Do nothing, as this is the "No" button now
+        this.deletePatient(patient.id);
+
         console.log("Deletion canceled");
       },
       reject: () => {
         // Call delete API on confirmation
-        this.deletePatient(patient.id);
       }
     });
   }
