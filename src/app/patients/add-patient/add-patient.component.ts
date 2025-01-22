@@ -218,81 +218,57 @@ export class AddPatientComponent implements AfterViewInit {
   }
 
   submitForm(): void {
-   // console.log("this.isPatientDataValid() :",this.isPatientDataValid());
-    
-    //if (this.isPatientDataValid()) {
-      // this.patientsService.addPatient(this.patientData).subscribe(
-      //   (response) => {
-      //     console.log('Patient data submitted successfully:', response);
-      //     // this.router.navigate(['/patients']); // Redirect to patients page
-      //   },
-      //   (error) => {
-      //     console.error('Error submitting patient data:', error);
-      //   }
-      // );
-      console.log("p :",this.patientData);
-      
+    if (this.patientData.dob === "") {
+        this.errorDisplay = true;
+        this.errorMessage = "Patient Date Of Birth is required";
+        return;
+    }
 
-   
-   if(this.patientData.dob =="")
-   {
-    this.errorDisplay=true;
-    this.errorMessage="Patient Date Of Birth is required";
-    return;
-   }
-    
-   if(this.patientData.mobileno =="")
-    {
-     this.errorDisplay=true;
-     this.errorMessage="Patient Mobile No is required";
-     return;
+    if (this.patientData.mobileno === "") {
+        this.errorDisplay = true;
+        this.errorMessage = "Patient Mobile No is required";
+        return;
     }
-     
-   if(this.patientData.nationalno =="")
-    {
-     this.errorDisplay=true;
-     this.errorMessage="Patient National No is required";
-     return;
+
+    if (this.patientData.nationalno === "") {
+        this.errorDisplay = true;
+        this.errorMessage = "Patient National No is required";
+        return;
     }
-     
-  
-      // Upload the patient data first
-      this.http.post("https://localhost:7266/api/Patients/addPatient", this.patientData).subscribe(
+
+    // Upload the patient data first
+    this.http.post("https://localhost:7266/api/Patients/addPatient", this.patientData).subscribe(
         (patientIdRes: any) => {
-          if(this.blob==undefined)
-            {
-              console.log("no image");
-              this.router.navigate(['/']);
+            if (!this.blob) {
+                console.log("No image uploaded");
+                this.router.navigate(['/']);
+                return;
             }
 
             const formData = new FormData();
             formData.append('file', this.blob, 'captured-face.png');
-          // Then upload the image
-          this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${patientIdRes}`, formData).subscribe(
-            (response: any) => {
-              console.log('Image uploaded successfully:', response);
-              
-              // Redirect to patients page after both operations are successful
-              this.ref.close("Updated");
-            },
-            (error) => {
-              console.error('Error uploading image:', error);
-            }
-          );
+
+            // Then upload the face image
+            this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${patientIdRes}`, formData).subscribe(
+                (response: any) => {
+                    console.log('Image uploaded successfully:', response);
+                    this.ref.close("Updated");
+                },
+                (error) => {
+                    console.error('Error uploading image:', error);
+                }
+            );
         },
         (error) => {
-          if(error.error.status =="NationalIdExists")
-          {
-            this.errorDisplay= true;
-            this.errorMessage=error.error.errorMsg
-          }
-          console.error('Error:', error.error.status);
+            if (error.error.status === "NationalIdExists") {
+                this.errorDisplay = true;
+                this.errorMessage = error.error.errorMsg;
+            }
+            console.error('Error:', error.error.status);
         }
-      );
-    // } else {
-    //   console.warn('Patient data is invalid. Please fill out all fields.');
-    // }
-   }
+    );
+}
+
 
   isPatientDataValid(): boolean {
     const nameValid = this.patientData.name.trim().length > 0 && /^[a-zA-Z\s]+$/.test(this.patientData.name);
