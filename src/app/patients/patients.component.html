@@ -22,9 +22,15 @@
       
   </div>
  <div class="row">
-    <div *ngIf="patients.length > 0" class="table-container">
-      <table class="table table-stripped">
-        <thead>
+    <p-table
+    class="table table-stripped"
+      [value]="patientResult.results" 
+  [lazy]="true" 
+  [paginator]="true" 
+  [rows]="10" 
+  [totalRecords]="patientResult.totalResults" 
+  (onLazyLoad)="loadpatients($event)">
+  <ng-template pTemplate="header">
           <tr>
             <th style="text-align: center;">ID</th>
             <th style="text-align: center;">Image</th>
@@ -34,10 +40,11 @@
             <th style="text-align: center;">National No</th>
             <th style="text-align: center;">Actions</th>
           </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let patient of patients">
-            <td>{{ patient.id }}</td>
+  </ng-template>
+  <ng-template pTemplate="body" let-patient>
+          
+          <tr >
+            <td style="text-align:center">{{ patient.id }}</td>
             <td style="text-align: center;">
               <img *ngIf="patient.faceImg" [src]="patient.faceImg" alt="Face Image" width="50" height="50"
                 style="border-radius: 50%; object-fit: cover;" />
@@ -58,10 +65,12 @@
 
             </td>
           </tr>
-        </tbody>
-      </table>
-    </div>
-  </div> 
+  </ng-template>
+</p-table>
+</div>
+
+
+
   <div class="row">
     <div class="col-sm-12 col-md-2">
       <!-- <div class="d-flex justify-content-evenly">
@@ -80,11 +89,7 @@
 </div> 
 
 
-<div *ngIf="patients.length === 0 && searchText" class="no-patients-message">
-  <p>No patients found matching "{{ searchText }}".</p>
-  
-  
-</div>
+
 
 
 

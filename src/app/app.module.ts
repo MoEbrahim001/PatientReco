@@ -13,6 +13,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { HttpClientModule } from '@angular/common/http';
 import { CalendarModule } from 'primeng/calendar';
+import { TableModule } from 'primeng/table';
+
 import { DialogModule } from 'primeng/dialog'; // Import DialogModule
 import { DynamicDialogModule, DynamicDialogConfig, DialogService } from 'primeng/dynamicdialog';
 import { EditPatientComponent } from './patients/edit-patient/edit-patient.component';
@@ -58,8 +60,8 @@ import { TooltipModule } from 'primeng/tooltip';
     DynamicDialogModule,
     DialogModule,
     InputTextModule,
-    TooltipModule
-    
+    TooltipModule,
+    TableModule
 
       
   ],

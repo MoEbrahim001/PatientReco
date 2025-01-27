@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreatePatient, Editpatient, ListPatients, viewPatient } from './Models/patient';  // Adjust based on where ListPatients is defined
+import { CreatePatient, Editpatient, ListPatients, PatientResult, viewPatient } from './Models/patient';  // Adjust based on where ListPatients is defined
 import { environment } from 'src/environments/environment';  // Import environment
+import { PatientParams } from './Models/PatientParams';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +23,8 @@ export class PatientsService {
   constructor(private httpClient: HttpClient , private http: HttpClient) {}
 
   // Example method to get the list of patients using the API URL from the environment
-  getPatients(): Observable<ListPatients[]> {
-    return this.httpClient.get<ListPatients[]>(`${environment.listPatients}`, this.httpHeader);
+  getPatients(patientParams:PatientParams): Observable<PatientResult> {
+    return this.httpClient.post<PatientResult>(`${environment.listPatients}`,patientParams, this.httpHeader);
   }
   // getPatients(): Observable<ListPatients[]> {
   //   return this.http.get<ListPatients[]>(`${this.apiUrl}/api/Patients`);

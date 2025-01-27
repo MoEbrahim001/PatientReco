@@ -10,6 +10,10 @@ export class ListPatients {
 
 
 }
+export class PatientResult{
+    results:   ListPatients[] = [];
+    totalResults: number
+}
 export class detectAndFindres
 {
     isMatch:boolean;

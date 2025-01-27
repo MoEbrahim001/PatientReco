@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { PatientsService } from './patients.service';
 import { Router } from '@angular/router';
-import { ListPatients } from './Models/patient';
+import { ListPatients, PatientResult } from './Models/patient';
 import { Subject } from 'rxjs';
 import { debounceTime, switchMap } from 'rxjs/operators'; 
 // import { ConfirmDeleteDialogComponent } from './confirm-delete-dialog/confirm-delete-dialog.component';
@@ -16,6 +16,7 @@ import { ConfirmationService } from 'primeng/api';
 import { AddPatientComponent } from './add-patient/add-patient.component';
 import { environment } from 'src/environments/environment';
 import { OpenCameraComponent } from './open-camera/open-camera.component';
+import { PatientParams } from './Models/PatientParams';
 
 @Component({
   selector: 'app-patients',
@@ -39,23 +40,27 @@ export class PatientsComponent implements OnInit {
   SuccessfullyMessage: string = '!';
   errorMessage: string = '';
   boundingBox: { x: number; y: number; width: number; height: number } | null = null;
-  patients: ListPatients[] = [];
   searchSubject: Subject<string> = new Subject();
   searchText: string = '';
   searchExecuted: boolean = false;
   capturedImageBlob: Blob | null = null;
   blob:Blob;
-
-
-
+  patientParams:PatientParams
+  patientResult:PatientResult
   constructor(private patientsService: PatientsService, private router: Router,private dialog:MatDialog,private confirmationService:ConfirmationService
     ,private http: HttpClient, // Inject HttpClient
     private sanitizer: DomSanitizer, private dialogService:DialogService,private ref:DynamicDialogRef,private config:DynamicDialogConfig) {}
 
   ngOnInit() {
   
-      this.loadAllPatients();
-  
+  this.patientResult={
+    results:[],
+    totalResults:0
+  }
+  this.patientParams = {
+    first:0,
+    rows: 0
+  }
     // this.searchSubject.pipe(
     //   debounceTime(300), // Wait for 300ms pause in events
     //   switchMap(searchText => this.patientsService.searchPatients(searchText)) // Switch to new observable
@@ -63,12 +68,16 @@ export class PatientsComponent implements OnInit {
     //   this.patients = data; // Update the patient list with search results
     // });
   }
-  loadAllPatients() {
-    this.patientsService.getPatients().subscribe((data) => {
-      this.patients = data;
-      console.log("p empty:",this.patients.length==0);
-      console.log("p empty:",this.patients)
-      console.log("this.patients ",this.patients);
+  loadpatients(event) {
+     console.log("event:",event.rows)
+    this.patientParams.first=event.first;
+    this.patientParams.rows = event.rows;
+     console.log(" this.patientParams:", this.patientParams)
+    console.log("First Column:",event.first)
+    console.log("Rows:",event.rows)
+    this.patientsService.getPatients(this.patientParams).subscribe((data) => {
+      this.patientResult = data;
+   console.log("this.patientResult :",this.patientResult )
 
 
       
@@ -83,7 +92,7 @@ export class PatientsComponent implements OnInit {
     refDialog.onClose.subscribe((Updated) => {
       if (Updated) {
         console.log("Updated list of patients");
-        this.loadAllPatients();
+        this.loadpatients(this.patientParams);
         this.showSuccessfullyMessage = true;
         this.SuccessfullyHeader='Added'
         this.SuccessfullyMessage='Patient Added SuccessFully'
@@ -106,9 +115,10 @@ export class PatientsComponent implements OnInit {
     refDialog.onClose.subscribe(( patient )=>{
       if(patient)
       {
-        console.log(" this.patient ", patient );
-        this.patients=[];
-        this.patients.push(patient)
+        console.log(" this.patient parent ", patient );
+        this.patientResult.results=[];
+        this.patientResult.totalResults = 1
+        this.patientResult.results.push(patient)
       }
    
       if (this.videoStream) {
@@ -271,19 +281,19 @@ export class PatientsComponent implements OnInit {
   //   });
   // }
   
-  
+ 
   
  
   onSearch() {
     if (this.searchText.trim()) {
       this.patientsService.searchPatients(this.searchText).subscribe((data) => {
-        this.patients = data;
+        // this.patients = data;
         this.searchExecuted = true; // Set to true after executing search
       });
     } else {
       // Optionally, reset the list if the search text is empty
-      this.loadAllPatients();
-      this.searchExecuted = false;
+      this.loadpatients(this.patientParams);
+            this.searchExecuted = false;
     }
   }
   onEdit(patient: ListPatients): void {
@@ -297,7 +307,7 @@ export class PatientsComponent implements OnInit {
       refDialog.onClose.subscribe((Updated)=>{
         if(Updated)
         {
-          this.loadAllPatients();
+          this.loadpatients(this.patientParams);
           this.showSuccessfullyMessage = true;
           this.SuccessfullyHeader='Edited';
           this.SuccessfullyMessage='Patient Edited SuccessFully';
@@ -324,7 +334,7 @@ export class PatientsComponent implements OnInit {
     console.log(`Deleting patient with ID: ${id}`);
     // Example API call
     this.patientsService.deletePatient(id).subscribe(() => {
-      this.loadAllPatients();
+      this.loadpatients(this.patientParams);
       this.showSuccessfullyMessage = true;
       this.SuccessfullyHeader='Deleted'
       this.SuccessfullyMessage='Patient Deleted SuccessFully'
@@ -338,8 +348,8 @@ export class PatientsComponent implements OnInit {
       header: "Delete Confirmation",
       message: `Are you sure you want to delete this patient?`,
       icon: 'pi pi-exclamation-triangle', // optional icon
-      acceptLabel: "No", // Changed from "Yes" to "No"
-      rejectLabel: "Yes", // Changed from "No" to "Yes"
+      acceptLabel: "Yes", // Changed from "Yes" to "No"
+      rejectLabel: "No", // Changed from "No" to "Yes"
       
       accept: () => {
         // Do nothing, as this is the "No" button now
