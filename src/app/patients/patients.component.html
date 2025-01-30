@@ -1,7 +1,7 @@
 <div class="container-fluid mt-5">
   <div class="row ms-1">
     <div class="col-2">
-      <input type="text" pInputText [(ngModel)]="searchText" (input)="onSearch()"
+      <input type="text" pInputText [(ngModel)]="patientParams.searchtext" (input)="onSearch()"
       placeholder="Search by Name or Mobile Number" class="w-100"/>
     </div>
     <div class="col-auto d-flex align-items-center">
@@ -29,7 +29,7 @@
   [paginator]="true" 
   [rows]="10" 
   [totalRecords]="patientResult.totalResults" 
-  (onLazyLoad)="loadpatients($event)">
+  (onLazyLoad)="loadPatients($event)">
   <ng-template pTemplate="header">
           <tr>
             <th style="text-align: center;">ID</th>

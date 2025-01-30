@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { CreatePatient, Editpatient, ListPatients, PatientResult, viewPatient } from './Models/patient';  // Adjust based on where ListPatients is defined
 import { environment } from 'src/environments/environment';  // Import environment
 import { PatientParams } from './Models/PatientParams';
+import { Subject } from 'rxjs';
+import { debounceTime, switchMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +42,7 @@ export class PatientsService {
   //   return this.httpClient.get<ListPatients[]>(`${environment.apiUrl}/Patients/search?searchText=${searchText}`, this.httpHeader);
   // }
   searchPatients(searchText: string): Observable<ListPatients[]> {
-    return this.httpClient.get<ListPatients[]>(`${environment.apiUrl}/Patients/search?searchText=${searchText}`, this.httpHeader);
+    return this.httpClient.get<ListPatients[]>(`${this.apiUrl}/search?searchText=${searchText}`);
   }
   getPatientById(id: number): Observable<Editpatient> {
     return this.httpClient.get<Editpatient>(`${environment.apiUrl}/Patients/${id}`, this.httpHeader);
