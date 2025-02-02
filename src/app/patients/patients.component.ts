@@ -215,7 +215,8 @@ export class PatientsComponent implements OnInit {
     }, 'image/png');
   }
 
-  onSearch(): void {
+
+  onSearchh(): void {
     if (this.patientParams.searchtext.trim()) {
       this.patientParams.first=0;
       this.patientParams.rows=10;
