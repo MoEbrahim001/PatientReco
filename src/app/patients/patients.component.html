@@ -45,10 +45,10 @@
           
           <tr >
             <td style="text-align:center">{{ patient.id }}</td>
-            <td style="text-align: center;">
-              <img *ngIf="patient.faceImg" [src]="patient.faceImg" alt="Face Image" width="50" height="50"
-                style="border-radius: 50%; object-fit: cover;" />
-            </td>
+         <td style="text-align: center;">
+  <img *ngIf="patient.faceImgUrl" [src]="patient.faceImgUrl" alt="Face Image" width="50" height="50"
+    style="border-radius: 50%; object-fit: cover;" />
+</td>
             <td style="text-align: center;">{{ patient.name }}</td>
             <td style="text-align: center;">{{ patient.mobileno }}</td>
             <td style="text-align: center;">{{ patient.dob | date:'dd-MM-yyyy' }}</td>

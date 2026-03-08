@@ -180,40 +180,38 @@ export class OpenCameraComponent implements OnInit {
 
   }
   async captureAndDetectFace() {
-    const canvas = this.canvasElement.nativeElement;
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        const formData = new FormData();
-        formData.append('file', blob, 'face_image.png');
-    
-        // Make API call to send captured image
-        try {
-          const response = await this.http.post<detectAndFindres>('http://127.0.0.1:5000/detectAndFind', formData).toPromise();
-          console.log(response);
-           this.patient = response.patientData
-           this.patient.name=response.patientName
-           
-          if (response['isMatch']) {
-            this.ref.close(this.patient)
-            // const patientData = response['patientData'];  // Extract patient data from response
-            // const patientDetails = `
-            //   Patient Found: ${response['patientName']}\n
-            //   Dob: ${patientData['Dob']}\n
-            //   Mobile No: ${patientData['Mobileno']}\n
-            //   Patient ID: ${patientData['PatientId']}\n
-            //   National No: ${patientData['NationalNo']}\n
-            //   Face Image: ${patientData['FaceImg']}
-            // `;
-            // alert(patientDetails);  // Display full patient information
-          } else {
-            alert('No matching patient found.');
-          }
-        } catch (error) {
-          console.error('Error during face detection', error);
-        }
+  const canvas = this.canvasElement.nativeElement;
+
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+
+    const formData = new FormData();
+    formData.append('file', blob, 'face_image.png');
+
+    try {
+      const response = await this.http
+        .post<detectAndFindres>('http://127.0.0.1:5000/detectAndFind', formData)
+        .toPromise();
+
+      console.log('detect response:', response);
+
+      if (response?.isMatch && response.patientData) {
+  const patient: ListPatients = {
+  ...response.patientData,
+  name: response.patientName ?? response.patientData.name,
+  faceImgUrl: response.patientData.faceImgUrl 
+};
+
+console.log('mapped patient:', patient);
+this.ref.close(patient);
+      } else {
+        alert('No matching patient found.');
       }
-    }, 'image/png');
-  }
+    } catch (error) {
+      console.error('Error during face detection', error);
+    }
+  }, 'image/png');
+}
   
   
   captureImage(): void {

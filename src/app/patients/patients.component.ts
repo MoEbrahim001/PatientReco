@@ -202,7 +202,7 @@ export class PatientsComponent implements OnInit {
         formData.append('file', blob, 'face_image.png');
 
         try {
-          const response = await fetch('https://localhost:7266/api/Patients/detectAndFind', {
+          const response = await fetch('https://localhost:7183/api/Patients/detectAndFind', {
             method: 'POST',
             body: formData,
           });

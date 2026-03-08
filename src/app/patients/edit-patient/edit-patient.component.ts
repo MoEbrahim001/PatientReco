@@ -291,7 +291,7 @@ export class EditPatientComponent implements OnInit {
           const formData = new FormData();
           formData.append('file', this.blob, 'captured-face.png');
           
-          this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${this.editpatient.id}`, formData).subscribe(
+          this.http.post(`https://localhost:7183/api/Patients/uploadFaceImage/${this.editpatient.id}`, formData).subscribe(
             (uploadResponse: any) => {
               console.log('Image uploaded successfully:', uploadResponse);
               

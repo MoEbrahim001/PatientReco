@@ -237,7 +237,7 @@ export class AddPatientComponent implements AfterViewInit {
     }
 
     // Upload the patient data first
-    this.http.post("https://localhost:7266/api/Patients/addPatient", this.patientData).subscribe(
+    this.http.post("https://localhost:7183/api/Patients/addPatient", this.patientData).subscribe(
         (patientIdRes: any) => {
             if (!this.blob) {
                 console.log("No image uploaded");
@@ -249,7 +249,7 @@ export class AddPatientComponent implements AfterViewInit {
             formData.append('file', this.blob, 'captured-face.png');
 
             // Then upload the face image
-            this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${patientIdRes}`, formData).subscribe(
+            this.http.post(`https://localhost:7183/api/Patients/uploadFaceImage/${patientIdRes}`, formData).subscribe(
                 (response: any) => {
                     console.log('Image uploaded successfully:', response);
                     this.ref.close("Updated");
