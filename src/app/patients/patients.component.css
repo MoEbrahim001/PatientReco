@@ -1,105 +1,473 @@
-.form{
-  margin-left: 1.2rem;
+.patients-page {
+  min-height: 100vh;
+
+  background: #f5f7fb;
+
+  padding: 30px;
 }
-/* Centering the table */
-.table-container {
+
+
+/* ============================= */
+/* HEADER */
+/* ============================= */
+
+.patients-header {
   display: flex;
-  justify-content: center;
+
+  justify-content: space-between;
   align-items: center;
-  /*height: 70vh;  Full height of the viewport */
-  /*width: 100vw;  Full width of the viewport */
-  padding: 20px;
-  box-sizing: border-box; /* Ensure padding doesn’t affect width */
+
+  margin-bottom: 22px;
 }
 
-/* CSS to make the table take full width */
-table {
-  width: 100%; /* Table will cover full width inside container */
-  border-collapse: collapse; /* For better visual appearance */
-}
-.button-spacing {
-  margin-right: 10px;
+.patients-header h2 {
+  margin: 0;
+
+  font-size: 28px;
+  font-weight: 700;
+
+  color: #1e293b;
 }
 
-th, td {
-  padding: 10px;
-  border: 1px solid #ddd;
+.patients-header p {
+  margin: 5px 0 0;
+
+  font-size: 14px;
+
+  color: #64748b;
 }
 
-th {
-  background-color: #f4f4f4;
+.add-patient-btn {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+
+  padding:
+    0.7rem 1rem !important;
 }
 
-.no-patients-message {
-  text-align: center;
-  margin-top: 20px;
+.add-patient-btn:hover {
+  background: #1d4ed8 !important;
 }
 
-.p-dialog-header .ng-tns-c4042076560-1 .ng-star-inserted{
-padding: 0px !important;
-}
-/* General Styling */
-.container-fluid {
-  padding: 1rem;
+
+/* ============================= */
+/* TOOLBAR */
+/* ============================= */
+
+.toolbar-card {
+  background: white;
+
+  border:
+    1px solid #e2e8f0;
+
+  border-radius: 12px;
+
+  padding: 16px;
+
+  margin-bottom: 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  box-shadow:
+    0 3px 14px rgba(15, 23, 42, 0.04);
 }
 
-.table-container {
-  margin-top: 1rem;
+
+/* SEARCH */
+
+.search-box {
+  flex: 1;
+
+  max-width: 500px;
+
+  position: relative;
 }
 
-.action-icon {
-  cursor: pointer;
-  margin-right: 10px;
+.search-box i {
+  position: absolute;
+
+  left: 14px;
+  top: 50%;
+
+  transform:
+    translateY(-50%);
+
+  color: #94a3b8;
+
+  z-index: 2;
 }
 
-.camera-feed {
+.search-box input {
   width: 100%;
-  height: auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  height: 44px;
+
+  padding-left: 42px;
+
+  border:
+    1px solid #dbe2ea;
+
+  border-radius: 8px;
 }
 
-/* Pop-up Styling
-.popup-header {
-  color: #04527e;
-  font-weight: bold;
-  font-size: 16pt;
-  text-align: center;
+.search-box input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.popup-content {
+
+/* CAMERA */
+
+.camera-search-btn {
+  background: #eff6ff !important;
+
+  color: #2563eb !important;
+
+  border:
+    1px solid #bfdbfe !important;
+}
+
+.camera-search-btn:hover {
+  background: #dbeafe !important;
+}
+
+
+/* ============================= */
+/* TABLE CARD */
+/* ============================= */
+
+.patients-table-card {
+  background: #ffffff;
+
+  border:
+    1px solid #e2e8f0;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 5px 20px rgba(15, 23, 42, 0.05);
+}
+
+
+/* PRIME TABLE */
+
+:host ::ng-deep .patients-table .p-datatable-thead > tr > th {
+  background: #f8fafc;
+
+  color: #475569;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+
+  border:
+    none;
+
+  border-bottom:
+    1px solid #e2e8f0;
+
+  padding:
+    14px 16px;
+}
+
+
+:host ::ng-deep .patients-table .p-datatable-tbody > tr > td {
+  padding:
+    14px 16px;
+
+  border:
+    none;
+
+  border-bottom:
+    1px solid #f1f5f9;
+
+  color: #334155;
+
+  vertical-align: middle;
+}
+
+
+:host ::ng-deep .patients-table .p-datatable-tbody > tr {
+  transition: 0.15s;
+}
+
+
+:host ::ng-deep .patients-table .p-datatable-tbody > tr:hover {
+  background: #f8fafc;
+}
+
+
+/* ============================= */
+/* PATIENT */
+/* ============================= */
+
+.patient-info {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.patient-avatar {
+  width: 45px;
+  height: 45px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.patient-avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.patient-avatar i {
+  font-size: 18px;
+}
+
+.patient-name {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
 }
 
-.popup-actions {
+.patient-name strong {
+  color: #1e293b;
+
+  font-size: 14px;
+}
+
+.patient-name small {
+  color: #94a3b8;
+
+  margin-top: 3px;
+}
+
+.patient-id {
+  font-weight: 600;
+
+  color: #64748b;
+}
+
+.national-number {
+  font-family:
+    monospace;
+
+  background: #f8fafc;
+
+  padding:
+    4px 7px;
+
+  border-radius: 5px;
+}
+
+
+/* ============================= */
+/* ACTIONS */
+/* ============================= */
+
+.action-buttons {
   display: flex;
-  justify-content: space-between;
-  width: 100%;
+
+  align-items: center;
+
+  gap: 8px;
 }
 
-.btn-capture {
-  background-color: #4caf50;
-  color: white;
-  font-weight: bold;
-  border-radius: 5px;
-  padding: 0.5rem 1rem;
+.action-btn {
+  width: 35px;
+  height: 35px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition:
+    0.15s ease;
 }
 
-.btn-capture:hover {
-  background-color: #45a049;
+.edit-btn {
+  background: #eff6ff;
+
+  color: #2563eb;
 }
 
-.btn-cancel {
-  background-color: #f44336;
-  color: white;
-  font-weight: bold;
-  border-radius: 5px;
-  padding: 0.5rem 1rem;
+.edit-btn:hover {
+  background: #dbeafe;
 }
 
-.btn-cancel:hover {
-  background-color: #d32f2f;
-} */
+.delete-btn {
+  background: #fef2f2;
+
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+}
+
+
+/* ============================= */
+/* EMPTY STATE */
+/* ============================= */
+
+.empty-state {
+  padding: 60px 20px;
+
+  text-align: center;
+
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 40px;
+
+  color: #94a3b8;
+
+  margin-bottom: 15px;
+}
+
+.empty-state h4 {
+  color: #334155;
+
+  margin-bottom: 5px;
+}
+
+
+/* ============================= */
+/* DIALOG */
+/* ============================= */
+
+.success-dialog-header {
+  display: flex;
+
+  gap: 8px;
+
+  align-items: center;
+
+  color: #15803d;
+
+  font-weight: 700;
+}
+
+.success-dialog-message {
+  background: #f0fdf4;
+
+  color: #166534;
+
+  padding: 14px;
+
+  border:
+    1px solid #bbf7d0;
+
+  border-radius: 8px;
+}
+
+
+.error-dialog-header {
+  display: flex;
+
+  gap: 8px;
+
+  align-items: center;
+
+  color: #dc2626;
+
+  font-weight: 700;
+}
+
+.error-dialog-message {
+  background: #fef2f2;
+
+  color: #991b1b;
+
+  padding: 14px;
+
+  border:
+    1px solid #fecaca;
+
+  border-radius: 8px;
+}
+
+
+/* ============================= */
+/* PAGINATOR */
+/* ============================= */
+
+:host ::ng-deep .p-paginator {
+  border: none;
+
+  border-top:
+    1px solid #e2e8f0;
+
+  padding: 14px;
+
+  background: white;
+}
+
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media(max-width: 768px) {
+
+  .patients-page {
+    padding: 15px;
+  }
+
+  .patients-header {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 15px;
+  }
+
+  .toolbar-card {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: none;
+  }
+
+  .patients-table-card {
+    overflow-x: auto;
+  }
+}

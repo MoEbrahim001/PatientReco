@@ -21,6 +21,7 @@
     "@angular/router": "^16.2.0",
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/face_detection": "^0.4.1646425229",
+    "@mediapipe/tasks-vision": "^1.0.1",
     "bootstrap": "^5.3.3",
     "face-api.js": "^0.22.2",
     "primeflex": "^3.3.1",

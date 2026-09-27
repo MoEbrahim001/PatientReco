@@ -17,7 +17,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { OpenCameraComponent } from './open-camera/open-camera.component';
 
 
-
 @NgModule({
   declarations: [
     PatientsComponent,
