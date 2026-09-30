@@ -11,7 +11,7 @@ import { debounceTime, switchMap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class PatientsService {
-  private apiUrl = 'https://localhost:7266/api/Patients'; // Update with your API URL
+  private apiUrl = 'https://localhost:7183/api/Patients'; // Update with your API URL
 
   httpHeader = {
     headers: new HttpHeaders({

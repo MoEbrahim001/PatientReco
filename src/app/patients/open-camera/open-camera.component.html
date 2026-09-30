@@ -1,13 +1,126 @@
-<div class="popup-container">
-  <div class="video-container">
-    <video  #videoElement autoplay></video>
-    <canvas #canvasElement class="overlay-canvas"></canvas>
+<div class="camera-popup">
+
+  <div class="camera-header">
+    <div class="header-icon">
+      <i class="pi pi-camera"></i>
+    </div>
+
+    <div>
+      <h3>Face Recognition</h3>
+      <p>Look directly at the camera and complete the liveness check.</p>
+    </div>
   </div>
+
+
+  <div class="video-card">
+
+    <div class="video-container">
+
+      <video
+        #videoElement
+        autoplay
+        playsinline>
+      </video>
+
+      <canvas
+        #canvasElement
+        class="overlay-canvas">
+      </canvas>
+
+      <div class="face-guide">
+        <div class="face-frame"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="liveness-status"
+    [class.liveness-success]="livenessPassed">
+
+    <div
+      class="status-icon"
+      [class.success-icon]="livenessPassed">
+
+      <i
+        class="pi"
+        [class.pi-eye]="!livenessPassed"
+        [class.pi-check]="livenessPassed">
+      </i>
+
+    </div>
+
+
+    <div class="status-content">
+
+      <span
+        class="status-label"
+        [hidden]="livenessPassed">
+        Liveness Check
+      </span>
+
+      <span
+        class="status-label success-label"
+        [hidden]="!livenessPassed">
+        Verification Successful
+      </span>
+
+
+      <span
+        class="status-message"
+        [hidden]="livenessPassed">
+        {{ livenessMessage }}
+      </span>
+
+
+      <span
+        class="status-message success-message"
+        [hidden]="!livenessPassed">
+        {{ livenessMessage }}
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div class="camera-help">
+    <i class="pi pi-info-circle"></i>
+
+    <span>
+      Keep your face inside the frame and blink naturally.
+    </span>
+  </div>
+
 
   <div class="button-container">
-    <button class="capture-button" (click)="captureAndDetectFace()">Capture Image</button>
-    <button class="cancel-button" (click)="stopCameraAndRedirect()">Cancel</button>
- 
-  </div>
-</div>
 
+    <button
+      type="button"
+      class="cancel-button"
+      (click)="stopCameraAndRedirect()">
+
+      <i class="pi pi-times"></i>
+
+      Cancel
+
+    </button>
+
+
+    <button
+      type="button"
+      class="capture-button"
+      (click)="captureAndDetectFace()"
+      [disabled]="!livenessPassed">
+
+      <i class="pi pi-search"></i>
+
+      Detect Patient
+
+    </button>
+
+  </div>
+
+</div>

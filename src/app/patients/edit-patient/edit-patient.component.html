@@ -1,62 +1,259 @@
-<div class="container-fluid">
-  <form (ngSubmit)="submitForm()" #patientForm="ngForm" class="patient-form">
-    <div class="row">
-      <div class="col">
-        <label for="name">Name:</label>
-        <input type="text" pInputText id="name" [(ngModel)]="editpatient.name" name="name" required />
-      </div>
-      <div class="col">
-        <label for="nationalno">National No:</label>
-        <input type="text" pInputText id="nationalno" [(ngModel)]="editpatient.nationalno" name="nationalno" required />
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
-        <label for="mobileno">Mobile No:</label>
-        <input id="mobileno" type="text" pInputText [(ngModel)]="editpatient.mobileno" name="mobileno" required />
-      </div>
-      <div class="col">
-        <label for="dob">Date of Birth:</label>
-        <p-calendar id="dob" name="dob" [(ngModel)]="editpatient.dob" [showIcon]="true" dateFormat="mm-dd-yy"
-          (onSelect)="onDateChange($event)" [style]="{'width':  '100%' }">
-        </p-calendar>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
-        <button pButton type="button" icon="pi pi-camera" (click)="openCamera()"
-          pTooltip="openCamera"></button>
-        <button pButton type="button" label="Capture Image" (click)="captureImage()" pTooltip="captureImage" class="mx-3"
-          [disabled]="!patientForm.valid"></button>  
-      </div>
-      <div class="col">
-        <canvas #canvasElement class="w-100"></canvas>
-      </div>
-    </div>
-    <div class="row" class="float-end mt-2">
-      <p-button label="Save" type="submit" icon="pi pi-check" iconPos="right"></p-button>
+<div class="patient-page">
 
-      <!-- <p-button type="submit"  pTooltip="Save"  icon="pi pi-check"></p-button> -->
+  <div class="page-header">
+    <div>
+      <h2>Edit Patient</h2>
+      <p>Update patient information and optionally register a new verified live face.</p>
     </div>
-    <video #videoElement width="640" height="480" style="display:none;"></video>
-  </form>
-  <p-dialog appendTo="body" modal="true" [(visible)]="showSuccessfullyMessage">
-    <ng-template pTemplate="header">
-      <h6 style="color: #04527e; font-weight: bold; font-size: 16pt;">
-        {{ SuccessfullyHeader }}
-      </h6>
-    </ng-template>
-    <span style="color: green; font-weight: bold; font-size: 12pt; text-align: center;">
-      {{ SuccessfullyMessage }}
-    </span>
-  </p-dialog>
 
-  <p-dialog appendTo="body" modal="true" [(visible)]="errorDisplay" [style]="{ width: '350px' }">
-    <ng-template pTemplate="header">
-      <h6 style="color: rgb(181, 4, 4);">Error</h6>
-    </ng-template>
-    <span style="color: rgb(181, 4, 4); font-weight: bold;">
-      {{ errorMessage }}
-    </span>
-  </p-dialog>
+    <div class="header-icon">
+      <i class="pi pi-user-edit"></i>
+    </div>
+  </div>
+
+  <div class="patient-card">
+
+    <form
+      (ngSubmit)="submitForm()"
+      #patientForm="ngForm"
+      class="patient-form">
+
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="pi pi-user"></i>
+        </div>
+
+        <div>
+          <h4>Patient Information</h4>
+          <p>Update the patient's personal details.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+
+        <div class="form-field">
+          <label>
+            Name
+            <span class="required">*</span>
+          </label>
+
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="editpatient.name"
+            name="name"
+            placeholder="Patient name"
+            required />
+        </div>
+
+        <div class="form-field">
+          <label>
+            National Number
+            <span class="required">*</span>
+          </label>
+
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="editpatient.nationalno"
+            name="nationalno"
+            placeholder="National number"
+            required />
+        </div>
+
+        <div class="form-field">
+          <label>
+            Mobile Number
+            <span class="required">*</span>
+          </label>
+
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="editpatient.mobileno"
+            name="mobileno"
+            placeholder="Mobile number"
+            required />
+        </div>
+
+        <div class="form-field">
+          <label>Date of Birth</label>
+
+          <p-calendar
+            name="dob"
+            [(ngModel)]="editpatient.dob"
+            [showIcon]="true"
+            dateFormat="dd-mm-yy"
+            (onSelect)="onDateChange($event)"
+            [style]="{ width: '100%' }">
+          </p-calendar>
+        </div>
+
+      </div>
+
+      <div class="face-section">
+
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="pi pi-camera"></i>
+          </div>
+
+          <div>
+            <h4>Update Live Face</h4>
+            <p>Only needed if you want to replace the patient's current face image.</p>
+          </div>
+        </div>
+
+        <div
+          class="human-status"
+          [class.human-status-verified]="livenessPassed">
+
+          <div
+            class="human-status-icon"
+            [class.verified-icon]="livenessPassed">
+
+            <i
+              class="pi"
+              [class.pi-eye]="!livenessPassed"
+              [class.pi-check-circle]="livenessPassed">
+            </i>
+          </div>
+
+          <div>
+            <strong>
+              {{ livenessPassed ? 'Human verified' : 'Human verification' }}
+            </strong>
+
+            <span>
+              {{ livenessMessage }}
+            </span>
+          </div>
+
+        </div>
+
+        <div class="camera-layout">
+
+          <div class="camera-actions">
+
+            <div class="camera-placeholder">
+              <i class="pi pi-shield"></i>
+
+              <strong>Live Human Check</strong>
+
+              <span>
+                Open the camera, keep one face visible,
+                then blink once to verify liveness.
+              </span>
+            </div>
+
+            <div class="camera-buttons">
+
+              <button
+                pButton
+                type="button"
+                icon="pi pi-camera"
+                label="Open Camera"
+                class="primary-button"
+                (click)="openCamera()">
+              </button>
+
+              <button
+                pButton
+                type="button"
+                icon="pi pi-image"
+                label="Capture Verified Face"
+                class="secondary-button"
+                (click)="captureImage()"
+                [disabled]="!patientForm.valid || !livenessPassed || !faceDetected">
+              </button>
+
+            </div>
+
+          </div>
+
+          <div
+            class="captured-image"
+            [class.verified-preview]="livenessPassed">
+
+            <div class="image-title">
+              <i class="pi pi-image"></i>
+              Live Camera / Captured Face
+            </div>
+
+            <canvas
+              #canvasElement
+              class="face-canvas">
+            </canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="form-footer">
+
+        <span class="required-info">
+          Saving without capturing a new face keeps the current image.
+        </span>
+
+        <button
+          pButton
+          type="submit"
+          icon="pi pi-check"
+          label="Save Changes"
+          class="submit-button">
+        </button>
+
+      </div>
+
+      <video
+        #videoElement
+        width="640"
+        height="480"
+        style="display:none;">
+      </video>
+
+    </form>
+
+  </div>
+
 </div>
+
+<p-dialog
+  appendTo="body"
+  [modal]="true"
+  [(visible)]="showSuccessfullyMessage"
+  [style]="{ width: '400px' }">
+
+  <ng-template pTemplate="header">
+    <div class="dialog-header success-header">
+      <i class="pi pi-check-circle"></i>
+      {{ SuccessfullyHeader }}
+    </div>
+  </ng-template>
+
+  <div class="dialog-message success-dialog-message">
+    {{ SuccessfullyMessage }}
+  </div>
+
+</p-dialog>
+
+<p-dialog
+  appendTo="body"
+  [modal]="true"
+  [(visible)]="errorDisplay"
+  [style]="{ width: '400px' }">
+
+  <ng-template pTemplate="header">
+    <div class="dialog-header error-header">
+      <i class="pi pi-exclamation-circle"></i>
+      Error
+    </div>
+  </ng-template>
+
+  <div class="dialog-message error-message">
+    {{ errorMessage }}
+  </div>
+
+</p-dialog>

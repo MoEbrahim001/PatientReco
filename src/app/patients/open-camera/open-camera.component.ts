@@ -1,7 +1,17 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild  } from '@angular/core';
-import { Router } from '@angular/router'; // Import the Router to handle navigation
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild
+} from '@angular/core';import { Router } from '@angular/router'; // Import the Router to handle navigation
 import { Camera } from '@mediapipe/camera_utils';
 import { HttpClient } from '@angular/common/http';
+import {
+  FaceLandmarker,
+  FilesetResolver,
+  FaceLandmarkerResult
+} from '@mediapipe/tasks-vision';
 import { FaceDetection, Results } from '@mediapipe/face_detection'; 
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { detectAndFindres, ListPatients } from '../Models/patient';
@@ -12,7 +22,7 @@ import { detectAndFindres, ListPatients } from '../Models/patient';
   styleUrls: ['./open-camera.component.css']
 })
 
-export class OpenCameraComponent implements OnInit {
+export class OpenCameraComponent implements AfterViewInit , OnDestroy {
   @ViewChild('videoElement', { static: false }) videoElement!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasElement', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
   videoStream: MediaStream | null = null;
@@ -22,84 +32,226 @@ export class OpenCameraComponent implements OnInit {
   blob:Blob;
   faceDetection: FaceDetection | null = null;
   boundingBox: { x: number; y: number; width: number; height: number } | null = null;
+private faceLandmarker!: FaceLandmarker;
 
+livenessPassed = false;
+livenessMessage = 'Look at the camera and blink';
+
+private eyesWereOpen = false;
+private eyesWereClosed = false;
+
+private lastVideoTime = -1;
+private animationFrameId: number | null = null;
   constructor(private router: Router,private ref:DynamicDialogRef, private http:HttpClient) {} // Inject Router for navigation
 
-  ngOnInit(): void {
-    // Access the camera stream and initialize the video element
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        console.log('Camera stream started.');
-        this.videoStream = stream;
-        this.videoElement.nativeElement.srcObject = stream;
-        this.videoElement.nativeElement.play();
+  ngAfterViewInit(): void {
 
-        // Delay initialization of face detection to ensure resources are ready
-        setTimeout(() => {
-          this.initFaceDetection();
-        }, 500);
-      })
-      .catch((error) => {
-        console.error('Error accessing camera:', error);
-      });
-  }
-  initFaceDetection(): void {
-    // Prevent reinitialization of face detection
-    if (this.faceDetection) {
-      console.warn('FaceDetection is already initialized.');
-      return;
-    }
+  navigator.mediaDevices
+    .getUserMedia({
+      video: true
+    })
+    .then(async (stream) => {
 
-    console.log('Initializing FaceDetection...');
-    this.faceDetection = new FaceDetection({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+      console.log(
+        'Camera stream started.'
+      );
+
+      this.videoStream = stream;
+
+      const video =
+        this.videoElement.nativeElement;
+
+      video.srcObject = stream;
+
+      await video.play();
+
+      await this.initFaceLandmarker();
+
+    })
+    .catch((error) => {
+
+      console.error(
+        'Error accessing camera:',
+        error
+      );
     });
+}
+ async initFaceLandmarker(): Promise<void> {
 
-    this.faceDetection.setOptions({
-      model: 'short', // Use the short-range model
-      minDetectionConfidence: 0.5,
-    });
+  console.log('Initializing Face Landmarker...');
 
-    this.faceDetection.onResults((results: any) => {
-     
-      this.drawFaceBoundaries(results);
-    });
+  const vision = await FilesetResolver.forVisionTasks(
+    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
+  );
 
-    console.log('FaceDetection initialized.');
-    this.processVideo();
-  }
-  
-  processVideo(): void {
-    const video = this.videoElement.nativeElement;
+  this.faceLandmarker =
+    await FaceLandmarker.createFromOptions(
+      vision,
+      {
+        baseOptions: {
+          modelAssetPath:
+            'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+          delegate: 'GPU'
+        },
 
-    // Check if video element is ready
-    if (!video || !video.readyState) {
-      console.warn('Video element is not ready yet.');
-      return;
-    }
+        runningMode: 'VIDEO',
 
-    let frameCount = 0;
+        numFaces: 1,
 
-    const process = async () => {
-      if (this.faceDetection) {
-        try {
-          // Send every 10th frame for face detection
-          if (frameCount % 10 === 0) {
-            await this.faceDetection.send({ image: video });
-          }
-          frameCount++;
-        } catch (error) {
-          console.error('Error in face detection:', error);
-        }
+        outputFaceBlendshapes: true,
+
+        minFaceDetectionConfidence: 0.5,
+
+        minFacePresenceConfidence: 0.5,
+
+        minTrackingConfidence: 0.5
       }
+    );
 
-      // Add a slight delay for better performance
-      setTimeout(() => requestAnimationFrame(process), 10);
-    };
+  console.log('Face Landmarker initialized.');
 
-    // Start the processing loop
-    process();
+  this.processVideo();
+}
+  private processLiveness(
+  result: FaceLandmarkerResult
+): void {
+
+  if (this.livenessPassed) {
+    return;
   }
+
+  if (
+    !result.faceLandmarks ||
+    result.faceLandmarks.length === 0
+  ) {
+    this.livenessMessage =
+      'No face detected';
+
+    this.eyesWereOpen = false;
+    this.eyesWereClosed = false;
+
+    return;
+  }
+
+
+  if (
+    !result.faceBlendshapes ||
+    result.faceBlendshapes.length === 0
+  ) {
+    return;
+  }
+
+
+  const categories =
+    result.faceBlendshapes[0].categories;
+
+
+  const leftBlink =
+    categories.find(
+      x => x.categoryName === 'eyeBlinkLeft'
+    )?.score ?? 0;
+
+
+  const rightBlink =
+    categories.find(
+      x => x.categoryName === 'eyeBlinkRight'
+    )?.score ?? 0;
+
+
+  console.log(
+    'Blink:',
+    leftBlink.toFixed(2),
+    rightBlink.toFixed(2)
+  );
+
+
+  // العينين مفتوحين
+  const eyesOpen =
+    leftBlink < 0.25 &&
+    rightBlink < 0.25;
+
+
+  // العينين مقفولين
+  const eyesClosed =
+    leftBlink > 0.55 &&
+    rightBlink > 0.55;
+
+
+  if (
+    eyesOpen &&
+    !this.eyesWereClosed
+  ) {
+
+    this.eyesWereOpen = true;
+
+    this.livenessMessage =
+      'Blink your eyes';
+
+    return;
+  }
+
+
+  if (
+    this.eyesWereOpen &&
+    eyesClosed
+  ) {
+
+    this.eyesWereClosed = true;
+
+    this.livenessMessage =
+      'Good... open your eyes';
+
+    return;
+  }
+
+
+  // Open → Closed → Open
+  // معناها Blink كاملة
+  if (
+    this.eyesWereOpen &&
+    this.eyesWereClosed &&
+    eyesOpen
+  ) {
+
+    console.log(
+      'LIVENESS PASSED'
+    );
+
+    this.livenessPassed = true;
+
+    this.livenessMessage =
+      'Liveness passed ✓';
+  }
+}
+ processVideo(): void {
+
+  const video = this.videoElement.nativeElement;
+
+  const process = () => {
+
+    if (
+      this.faceLandmarker &&
+      video.readyState >= 2 &&
+      video.currentTime !== this.lastVideoTime
+    ) {
+
+      this.lastVideoTime = video.currentTime;
+
+      const result =
+        this.faceLandmarker.detectForVideo(
+          video,
+          performance.now()
+        );
+
+      this.processLiveness(result);
+    }
+
+    this.animationFrameId =
+      requestAnimationFrame(process);
+  };
+
+  process();
+}
 
   drawFaceBoundaries(results: Results): void {
     const canvas = this.canvasElement.nativeElement;
@@ -141,28 +293,59 @@ export class OpenCameraComponent implements OnInit {
     });
   }
 
-  ngOnDestroy(): void {
-    console.log('Cleaning up resources...');
-    // Stop the video stream
-    if (this.videoStream) {
-      this.videoStream.getTracks().forEach((track) => track.stop());
-      console.log('Camera stream stopped.');
-    }
+ ngOnDestroy(): void {
 
-    // Clean up the face detection object
-    if (this.faceDetection) {
-      this.faceDetection.reset(); // Reset resources
-      this.faceDetection.close(); // Properly close the Mediapipe object
-      this.faceDetection = null;  // Prevent further access
-      console.log('FaceDetection cleaned up.');
-    }
+  console.log(
+    'Cleaning up resources...'
+  );
 
-    // Stop the video element
-    const video = this.videoElement.nativeElement;
+  // Stop requestAnimationFrame
+  if (this.animationFrameId !== null) {
+
+    cancelAnimationFrame(
+      this.animationFrameId
+    );
+
+    this.animationFrameId = null;
+  }
+
+
+  // Close Face Landmarker
+  if (this.faceLandmarker) {
+
+    this.faceLandmarker.close();
+  }
+
+
+  // Stop camera stream
+  if (this.videoStream) {
+
+    this.videoStream
+      .getTracks()
+      .forEach(
+        track => track.stop()
+      );
+
+    this.videoStream = null;
+  }
+
+
+  // Stop video
+  if (this.videoElement?.nativeElement) {
+
+    const video =
+      this.videoElement.nativeElement;
+
     video.pause();
+
     video.srcObject = null;
   }
 
+
+  console.log(
+    'Camera and FaceLandmarker cleaned up.'
+  );
+}
   
 
   // Method to stop the camera and navigate to the patients' page
@@ -180,40 +363,99 @@ export class OpenCameraComponent implements OnInit {
 
   }
   async captureAndDetectFace() {
-    const canvas = this.canvasElement.nativeElement;
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        const formData = new FormData();
-        formData.append('file', blob, 'face_image.png');
-    
-        // Make API call to send captured image
-        try {
-          const response = await this.http.post<detectAndFindres>('http://127.0.0.1:5000/detectAndFind', formData).toPromise();
-          console.log(response);
-           this.patient = response.patientData
-           this.patient.name=response.patientName
-           
-          if (response['isMatch']) {
-            this.ref.close(this.patient)
-            // const patientData = response['patientData'];  // Extract patient data from response
-            // const patientDetails = `
-            //   Patient Found: ${response['patientName']}\n
-            //   Dob: ${patientData['Dob']}\n
-            //   Mobile No: ${patientData['Mobileno']}\n
-            //   Patient ID: ${patientData['PatientId']}\n
-            //   National No: ${patientData['NationalNo']}\n
-            //   Face Image: ${patientData['FaceImg']}
-            // `;
-            // alert(patientDetails);  // Display full patient information
-          } else {
-            alert('No matching patient found.');
-          }
-        } catch (error) {
-          console.error('Error during face detection', error);
-        }
-      }
-    }, 'image/png');
+
+  if (!this.livenessPassed) {
+    alert('Please blink first.');
+    return;
   }
+
+  const video = this.videoElement.nativeElement;
+  const canvas = this.canvasElement.nativeElement;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return;
+  }
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  // مهم جدًا:
+  // خد صورة CURRENT من الفيديو
+  ctx.drawImage(
+    video,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  canvas.toBlob(async (blob) => {
+
+    if (!blob) {
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append(
+      'file',
+      blob,
+      'face_image.png'
+    );
+
+    try {
+
+      const response = await this.http
+        .post<detectAndFindres>(
+          'http://127.0.0.1:5000/detectAndFind',
+          formData
+        )
+        .toPromise();
+
+      console.log(
+        'detect response:',
+        response
+      );
+
+      if (
+        response?.isMatch &&
+        response.patientData
+      ) {
+
+        const patient: ListPatients = {
+          ...response.patientData,
+          name:
+            response.patientName ??
+            response.patientData.name,
+          faceImgUrl:
+            response.patientData.faceImgUrl
+        };
+
+        console.log(
+          'mapped patient:',
+          patient
+        );
+
+        this.ref.close(patient);
+
+      } else {
+
+        alert(
+          'No matching patient found.'
+        );
+      }
+
+    } catch (error) {
+
+      console.error(
+        'Error during face detection',
+        error
+      );
+    }
+
+  }, 'image/png');
+}
   
   
   captureImage(): void {

@@ -1,398 +1,657 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PatientsService } from '../patients.service';
-import { CreatePatient, Editpatient, ListPatients, viewPatient } from '../Models/patient';
-import { FaceDetection, Results } from '@mediapipe/face_detection';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
-import { FormBuilder, FormGroup } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import {
+  FaceLandmarker,
+  FaceLandmarkerResult,
+  FilesetResolver
+} from '@mediapipe/tasks-vision';
 
+import { PatientsService } from '../patients.service';
+import {
+  Editpatient,
+  viewPatient
+} from '../Models/patient';
 
 @Component({
   selector: 'app-edit-patient',
   templateUrl: './edit-patient.component.html',
-  styleUrls: ['./edit-patient.component.css'],
-
-
+  styleUrls: ['./edit-patient.component.css']
 })
-export class EditPatientComponent implements OnInit {
-  @ViewChild('videoElement', { static: false }) videoElement!: ElementRef<HTMLVideoElement>;
-  @ViewChild('canvasElement', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
-  showSuccessfullyMessage: boolean = false;
-  errorDisplay: boolean = false;
-  SuccessfullyHeader: string = 'Success';
-  SuccessfullyMessage: string = 'Patient saved successfully!';
-  errorMessage: string = 'An error occurred while saving the patient.';
-  capturedImageUrl: string | null = null;
-  faceDetection: FaceDetection | null = null;
+export class EditPatientComponent implements OnInit, OnDestroy {
+  @ViewChild('videoElement', { static: false })
+  videoElement!: ElementRef<HTMLVideoElement>;
+
+  @ViewChild('canvasElement', { static: false })
+  canvasElement!: ElementRef<HTMLCanvasElement>;
+
+  showSuccessfullyMessage = false;
+  errorDisplay = false;
+
+  SuccessfullyHeader = 'Success';
+  SuccessfullyMessage = 'Patient saved successfully!';
+  errorMessage = 'An error occurred while saving the patient.';
+
   videoStream: MediaStream | null = null;
-  boundingBox: { x: number; y: number; width: number; height: number } | null = null;
-  blob:Blob;
-  dob:Date;
+  blob!: Blob;
+
+  boundingBox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null = null;
+
+  dob!: Date;
+
   patient: viewPatient = {
     id: 0,
     name: '',
     mobileno: '',
     nationalno: '',
-     dob:new Date(),
-
-    faceImg: '' // Ensure this is defined
+    dob: new Date(),
+    faceImg: ''
   };
-  editpatient:Editpatient={   
+
+  editpatient: Editpatient = {
     id: 0,
     name: '',
     mobileno: '',
-    nationalno: '',dob:new Date,strDob:'',dobdate: new Date,faceImg:''}
+    nationalno: '',
+    dob: new Date(),
+    strDob: '',
+    dobdate: new Date(),
+    faceImg: ''
+  };
+
+  // ---------------- Human / liveness detection ----------------
+
+  private faceLandmarker: FaceLandmarker | null = null;
+  private animationFrameId: number | null = null;
+  private lastVideoTime = -1;
+
+  livenessPassed = false;
+  faceDetected = false;
+  livenessMessage = 'Open the camera and look directly at it.';
+
+  private eyesWereOpen = false;
+  private eyesWereClosed = false;
+
   constructor(
-    private http:HttpClient,
+    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
-    private patientsService: PatientsService,private datePipe:DatePipe,private ref:DynamicDialogRef,private config:DynamicDialogConfig
+    private patientsService: PatientsService,
+    private datePipe: DatePipe,
+    private ref: DynamicDialogRef,
+    private config: DynamicDialogConfig
   ) {}
 
   ngOnInit(): void {
-    // const id = +this.route.snapshot.paramMap.get('id')!;
-    // console.log('Route ID:', id); // Log the ID from the URL
-    var id=this.config.data.patientId
-    console.log("id :",id);
-    
-    this.patientsService.getPatientById(id).subscribe((data) => {
-      // Convert dob to Date object if it's a string
-      console.log("id after getbyid:",data);
-      
-     // this.patient = { ...data, dob: new Date(data.dob) };
-      this.editpatient= data;
-      this.editpatient.dob = new Date( this.editpatient.dob);
-    });
+    const id = this.config.data.patientId;
+
+    this.patientsService
+      .getPatientById(id)
+      .subscribe(data => {
+        this.editpatient = data;
+        this.editpatient.dob = new Date(
+          this.editpatient.dob
+        );
+      });
   }
 
-
-  openCamera(): void {
-    // Ensure the camera isn't reopened if already active
+  async openCamera(): Promise<void> {
     if (this.videoStream) {
       console.warn('Camera is already open.');
       return;
     }
-  
-    navigator.mediaDevices
-      .getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
-      .then((stream) => {
-        this.videoStream = stream;
-        this.videoElement.nativeElement.srcObject = stream;
-        this.videoElement.nativeElement.play();
-        this.initFaceDetection();
-      })
-      .catch((error) => {
-        console.error('Error accessing camera:', error);
+
+    this.resetLiveness();
+    this.livenessMessage = 'Starting camera...';
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user'
+        }
       });
+
+      this.videoStream = stream;
+
+      const video = this.videoElement.nativeElement;
+      video.srcObject = stream;
+      await video.play();
+
+      await this.initFaceLandmarker();
+
+      this.livenessMessage =
+        'Face not verified yet. Look at the camera and blink.';
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+
+      this.errorDisplay = true;
+      this.errorMessage = 'Unable to access the camera.';
+      this.stopCameraProcessing();
+    }
   }
-  
-  initFaceDetection(): void {
-    this.faceDetection = new FaceDetection({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`,
-    });
-  
-    // Set options for face detection
-    this.faceDetection.setOptions({
-      model: 'short',
-      minDetectionConfidence: 0.5,
-    });
-  
-    // Handle detection results
-    this.faceDetection.onResults((results: Results) => this.drawFaceBoundaries(results));
-  
-    // Start processing video frames
+
+  private async initFaceLandmarker(): Promise<void> {
+    if (this.faceLandmarker) {
+      this.faceLandmarker.close();
+      this.faceLandmarker = null;
+    }
+
+    const vision = await FilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
+    );
+
+    this.faceLandmarker = await FaceLandmarker.createFromOptions(
+      vision,
+      {
+        baseOptions: {
+          modelAssetPath:
+            'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'
+        },
+        runningMode: 'VIDEO',
+        numFaces: 2,
+        outputFaceBlendshapes: true,
+        minFaceDetectionConfidence: 0.65,
+        minFacePresenceConfidence: 0.65,
+        minTrackingConfidence: 0.65
+      }
+    );
+
     this.processVideo();
   }
-  
-  drawFaceBoundaries(results: Results): void {
-    const canvas = this.canvasElement.nativeElement;
-    const ctx = canvas.getContext('2d');
-  
-    if (!ctx || !results.detections) {
-      return;
-    }
-  
-    // Match canvas size to video element
-    canvas.width = this.videoElement.nativeElement.videoWidth;
-    canvas.height = this.videoElement.nativeElement.videoHeight;
-  
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-    // Draw video frame to canvas
-    ctx.drawImage(this.videoElement.nativeElement, 0, 0, canvas.width, canvas.height);
-  
-    // Reset bounding box
-    this.boundingBox = null;
-  
-    // Draw bounding boxes for each detected face
-    results.detections.forEach((detection) => {
-      const boundingBox = detection.boundingBox;
-  
-      ctx.strokeStyle = '#00FF00'; // Green bounding box
-      ctx.lineWidth = 3; // Thickness of the bounding box
-      ctx.strokeRect(
-        boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
-        boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
-        boundingBox.width * canvas.width,
-        boundingBox.height * canvas.height
-      );
-  
-      // Save bounding box details
-      this.boundingBox = {
-        x: boundingBox.xCenter * canvas.width - (boundingBox.width * canvas.width) / 2,
-        y: boundingBox.yCenter * canvas.height - (boundingBox.height * canvas.height) / 2,
-        width: boundingBox.width * canvas.width,
-        height: boundingBox.height * canvas.height,
-      };
-    });
-  }
-  
-  processVideo(): void {
+
+  private processVideo(): void {
     const video = this.videoElement.nativeElement;
-    let frameCount = 0;
-  
+
     const process = () => {
-      if (this.faceDetection) {
-        try {
-          // Process every 10th frame for efficiency
-          if (frameCount % 10 === 0) {
-            this.faceDetection.send({ image: video });
-          }
-          frameCount++;
-        } catch (error) {
-          console.error('Error in face detection:', error);
-        }
+      if (
+        this.faceLandmarker &&
+        this.videoStream &&
+        video.readyState >= 2 &&
+        video.currentTime !== this.lastVideoTime
+      ) {
+        this.lastVideoTime = video.currentTime;
+
+        const result = this.faceLandmarker.detectForVideo(
+          video,
+          performance.now()
+        );
+
+        this.handleFaceResult(result);
       }
-  
-      // Slight delay for smoother processing
-      setTimeout(() => requestAnimationFrame(process), 50);
+
+      if (this.videoStream) {
+        this.animationFrameId = requestAnimationFrame(process);
+      }
     };
-  
+
     process();
   }
-  
-  ngOnDestroy(): void {
-    // Stop video stream and release resources
-    if (this.videoStream) {
-      this.videoStream.getTracks().forEach((track) => track.stop());
-      this.videoStream = null;
-    }
-  
-    // Close face detection instance if initialized
-    if (this.faceDetection) {
-      this.faceDetection.close();
-      this.faceDetection = null;
-    }
-  }
 
-  
-  onDateChange(event: any) {
-    const formattedDate = this.datePipe.transform(event, 'MM-dd-yyyy');
-    console.log('Formatted date:', formattedDate);
-        this.editpatient.strDob = this.datePipe.transform(event, 'MM-dd-yyyy');;
-
-    // Use the formatted string as needed
-  }
-  // onDateChange($event: Event) {
-  //   // const input = $event.target as HTMLInputElement;
-  //   // this.Editpatient.dob = input.value;
-  //   console.log("event :", $event.returnValue);
-
-  //   console.log("date change");
-
-  // }
-  
-
-  // onSave(): void {
-  //   const formData = new FormData();
-
-  //   formData.append('id', this.patient.id.toString());
-  //   formData.append('name', this.patient.name);
-  //   formData.append('mobileno', this.patient.mobileno);
-  //   formData.append('dob', this.patient.dob);
-  //   formData.append('nationalno', this.patient.nationalno);
-
-  //   this.patientsService.updatePatient(formData).subscribe(() => {
-  //     this.router.navigate(['/']); // Redirect to patients list after saving
-  //   });
-  // }
-  captureImage(): void {
+  private handleFaceResult(result: FaceLandmarkerResult): void {
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
     const ctx = canvas.getContext('2d');
-  
-    if (ctx && this.boundingBox) {
-      const { x, y, width, height } = this.boundingBox;
-      const faceCanvas = document.createElement('canvas');
-      faceCanvas.width = width;
-      faceCanvas.height = height;
-      const faceCtx = faceCanvas.getContext('2d');
-  
-      faceCtx?.drawImage(video, x, y, width, height, 0, 0, width, height);
-      const dataUrl = faceCanvas.toDataURL('image/png');
-      this.blob = this.dataURLtoBlob(dataUrl);
-      console.log("Image captured and blob created");
-  
-      // Stop the camera stream
-      if (this.videoStream) {
-        this.videoStream.getTracks().forEach(track => track.stop());
-        console.log("Camera stopped.");
-      }
-  
-    } else {
-      console.error('No bounding box detected.');
-    }
-  }
-  
-  dataURLtoBlob(dataURL: string): Blob {
-    const [mimeString, bstr] = dataURL.split(',');
-    const mime = mimeString.match(/:(.*?);/)![1];
-    const u8arr = Uint8Array.from(atob(bstr), (c) => c.charCodeAt(0));
-    return new Blob([u8arr], { type: mime });
-  }
-  // getFormattedDate(): string {
-  //   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
-  //   return this.dob.toLocaleDateString('en-US', options); // Adjust the locale if needed
-  // }
-  submitForm(): void {
-    console.log("Editpatient:", this.editpatient);
-    console.log("date :" , this.editpatient.dobdate)
-    if(this.editpatient.name == '')
-    {
-      this.errorDisplay = true;
-      this.errorMessage = "Name is Required";
+
+    if (!ctx || video.videoWidth === 0 || video.videoHeight === 0) {
       return;
     }
-    if(this.editpatient.nationalno == '')
-      {
-        this.errorDisplay = true;
-        this.errorMessage = "National is Required";
-        return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const faces = result.faceLandmarks ?? [];
+
+    if (faces.length === 0) {
+      this.faceDetected = false;
+      this.boundingBox = null;
+      this.resetBlinkOnly();
+      this.livenessMessage = 'No human face detected.';
+      return;
+    }
+
+    if (faces.length > 1) {
+      this.faceDetected = false;
+      this.boundingBox = null;
+      this.resetBlinkOnly();
+      this.livenessMessage =
+        'More than one face detected. Keep only one person in view.';
+      return;
+    }
+
+    const box = this.getFaceBoundingBox(
+      faces[0],
+      canvas.width,
+      canvas.height
+    );
+
+    if (!box) {
+      this.faceDetected = false;
+      this.boundingBox = null;
+      this.resetBlinkOnly();
+      this.livenessMessage =
+        'Move closer and keep your full face visible.';
+      return;
+    }
+
+    this.faceDetected = true;
+    this.boundingBox = box;
+
+    ctx.strokeStyle =
+      this.livenessPassed ? '#16a34a' : '#f59e0b';
+
+    ctx.lineWidth = 4;
+
+    ctx.strokeRect(
+      box.x,
+      box.y,
+      box.width,
+      box.height
+    );
+
+    this.processBlink(result);
+  }
+
+  private getFaceBoundingBox(
+    landmarks: Array<{ x: number; y: number }>,
+    canvasWidth: number,
+    canvasHeight: number
+  ): { x: number; y: number; width: number; height: number } | null {
+    if (!landmarks.length) {
+      return null;
+    }
+
+    const xs = landmarks.map(point => point.x);
+    const ys = landmarks.map(point => point.y);
+
+    let minX = Math.min(...xs);
+    let maxX = Math.max(...xs);
+    let minY = Math.min(...ys);
+    let maxY = Math.max(...ys);
+
+    const normalizedWidth = maxX - minX;
+    const normalizedHeight = maxY - minY;
+
+    if (
+      normalizedWidth < 0.16 ||
+      normalizedHeight < 0.20
+    ) {
+      return null;
+    }
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    if (
+      centerX < 0.15 ||
+      centerX > 0.85 ||
+      centerY < 0.12 ||
+      centerY > 0.88
+    ) {
+      return null;
+    }
+
+    const padX = normalizedWidth * 0.22;
+    const padTop = normalizedHeight * 0.35;
+    const padBottom = normalizedHeight * 0.22;
+
+    minX = Math.max(0, minX - padX);
+    maxX = Math.min(1, maxX + padX);
+    minY = Math.max(0, minY - padTop);
+    maxY = Math.min(1, maxY + padBottom);
+
+    return {
+      x: minX * canvasWidth,
+      y: minY * canvasHeight,
+      width: (maxX - minX) * canvasWidth,
+      height: (maxY - minY) * canvasHeight
+    };
+  }
+
+  private processBlink(result: FaceLandmarkerResult): void {
+    if (this.livenessPassed) {
+      this.livenessMessage =
+        'Live human verified. Ready to capture.';
+      return;
+    }
+
+    const blendshapes = result.faceBlendshapes;
+
+    if (!blendshapes || blendshapes.length !== 1) {
+      this.livenessMessage =
+        'Face detected. Keep looking at the camera.';
+      return;
+    }
+
+    const categories =
+      blendshapes[0].categories;
+
+    const leftBlink =
+      categories.find(
+        x => x.categoryName === 'eyeBlinkLeft'
+      )?.score ?? 0;
+
+    const rightBlink =
+      categories.find(
+        x => x.categoryName === 'eyeBlinkRight'
+      )?.score ?? 0;
+
+    const eyesOpen =
+      leftBlink < 0.25 &&
+      rightBlink < 0.25;
+
+    const eyesClosed =
+      leftBlink > 0.55 &&
+      rightBlink > 0.55;
+
+    if (!this.eyesWereOpen) {
+      if (eyesOpen) {
+        this.eyesWereOpen = true;
+        this.livenessMessage =
+          'Human face detected. Blink once to verify.';
+      } else {
+        this.livenessMessage =
+          'Open your eyes and look at the camera.';
       }
-      if(this.editpatient.mobileno == '')
-        {
+
+      return;
+    }
+
+    if (
+      this.eyesWereOpen &&
+      !this.eyesWereClosed &&
+      eyesClosed
+    ) {
+      this.eyesWereClosed = true;
+      this.livenessMessage = 'Good. Open your eyes.';
+      return;
+    }
+
+    if (
+      this.eyesWereOpen &&
+      this.eyesWereClosed &&
+      eyesOpen
+    ) {
+      this.livenessPassed = true;
+      this.livenessMessage =
+        'Live human verified. Ready to capture.';
+
+      console.log('HUMAN LIVENESS PASSED');
+    }
+  }
+
+  captureImage(): void {
+    if (
+      !this.livenessPassed ||
+      !this.faceDetected ||
+      !this.boundingBox
+    ) {
+      this.errorDisplay = true;
+      this.errorMessage =
+        'A live human face must be detected and verified before capturing.';
+      return;
+    }
+
+    const video = this.videoElement.nativeElement;
+    const previewCanvas = this.canvasElement.nativeElement;
+
+    const {
+      x,
+      y,
+      width,
+      height
+    } = this.boundingBox;
+
+    const sourceX = Math.max(0, Math.floor(x));
+    const sourceY = Math.max(0, Math.floor(y));
+
+    const sourceWidth = Math.min(
+      video.videoWidth - sourceX,
+      Math.floor(width)
+    );
+
+    const sourceHeight = Math.min(
+      video.videoHeight - sourceY,
+      Math.floor(height)
+    );
+
+    if (sourceWidth <= 0 || sourceHeight <= 0) {
+      this.errorDisplay = true;
+      this.errorMessage =
+        'Unable to capture a valid face image.';
+      return;
+    }
+
+    const faceCanvas =
+      document.createElement('canvas');
+
+    faceCanvas.width = sourceWidth;
+    faceCanvas.height = sourceHeight;
+
+    const faceCtx =
+      faceCanvas.getContext('2d');
+
+    if (!faceCtx) {
+      return;
+    }
+
+    faceCtx.drawImage(
+      video,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      sourceWidth,
+      sourceHeight
+    );
+
+    faceCanvas.toBlob(
+      blob => {
+        if (!blob) {
           this.errorDisplay = true;
-          this.errorMessage = "Mobile No is Required";
+          this.errorMessage =
+            'Could not create the captured image.';
           return;
         }
-        
-        // if(this.editpatient.dob ==)
-        //   {
-        //     this.errorDisplay = true;
-        //     this.errorMessage = "Name is Required";
-        //     return;
-        //   }
-    this.patientsService.updatePatient(this.editpatient).subscribe({
-      next: (data) => {
-        if (this.blob) {
-          const formData = new FormData();
-          formData.append('file', this.blob, 'captured-face.png');
-          
-          this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${this.editpatient.id}`, formData).subscribe(
-            (uploadResponse: any) => {
-              console.log('Image uploaded successfully:', uploadResponse);
-              
-              // Show success dialog when both patient update and image upload are successful
-              this.showSuccessfullyMessage = true;
-              
-              // Redirect to the patients page after displaying the success message
-              this.ref.close("Updated");
-            },
-            (uploadError: any) => {
-              console.error('Image upload failed:', uploadError);
-              
-              // Show error dialog if image upload fails
-              this.errorMessage = 'Failed to upload image';
-              this.errorDisplay = true;
-            }
+
+        this.blob = blob;
+
+        this.stopCameraProcessing();
+
+        const previewCtx =
+          previewCanvas.getContext('2d');
+
+        if (previewCtx) {
+          previewCanvas.width = sourceWidth;
+          previewCanvas.height = sourceHeight;
+
+          previewCtx.clearRect(
+            0,
+            0,
+            sourceWidth,
+            sourceHeight
           );
-        } else {
-          // No image uploaded, set success dialog for patient data update
-          this.showSuccessfullyMessage = true;
-          this.ref.close("Updated");
+
+          previewCtx.drawImage(
+            faceCanvas,
+            0,
+            0,
+            sourceWidth,
+            sourceHeight
+          );
         }
+
+        this.livenessMessage =
+          'Image captured successfully.';
+
+        console.log(
+          'Verified human face captured.'
+        );
       },
-      error: (updateError: any) => {
-        console.error('Patient update failed:', updateError);
-        
-        // Show error dialog if patient update fails
-        this.errorMessage = 'Failed to update patient data';
-        this.errorDisplay = true;
-      }
-    });
-    
-    console.log("No image uploaded, navigating to homepage.");
+      'image/png',
+      1
+    );
   }
-  
 
-     
-      
-   // Step 1: Update patient data first
-  //  this.http.put(`http://localhost:7266/api/Patients/UpdatePatient`, this.editpatient).subscribe(
-  //     (response: any) => {
-  //        console.log('Patient data updated successfully:', response);
+  private resetBlinkOnly(): void {
+    if (this.livenessPassed) {
+      return;
+    }
 
-  //        if (!this.blob) {
-  //           console.log("No image uploaded, navigating to homepage.");
-  //           this.router.navigate(['/']);
-  //           return; // Exit if no image
-  //        }
+    this.eyesWereOpen = false;
+    this.eyesWereClosed = false;
+  }
 
-  // // //        // Step 2: If an image is captured, upload it
-  //        const formData = new FormData();
-  //        formData.append('file', this.blob, 'captured-face.png');
+  private resetLiveness(): void {
+    this.livenessPassed = false;
+    this.faceDetected = false;
 
-  //       //  this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${id}`, formData).subscribe(
-  //       //     (response: any) => {
-  //       //        console.log('Image uploaded successfully:', response);
-  //       //        this.router.navigate(['/']); // Redirect after both operations
-  //       //     },
-  //       //     (error) => {
-  //       //        console.error('Error uploading image:', error);
-  //       //     }
-  //       //  );
-  //     },
-  //     (error) => {
-  //        console.error('Error updating patient data:', error);
-  //     }
-  //   );
-   
-    
+    this.eyesWereOpen = false;
+    this.eyesWereClosed = false;
+
+    this.boundingBox = null;
+    this.lastVideoTime = -1;
+  }
+
+  private stopCameraProcessing(): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(
+        this.animationFrameId
+      );
+
+      this.animationFrameId = null;
+    }
+
+    if (this.faceLandmarker) {
+      this.faceLandmarker.close();
+      this.faceLandmarker = null;
+    }
+
+    if (this.videoStream) {
+      this.videoStream
+        .getTracks()
+        .forEach(track => track.stop());
+
+      this.videoStream = null;
+    }
+
+    if (this.videoElement?.nativeElement) {
+      const video =
+        this.videoElement.nativeElement;
+
+      video.pause();
+      video.srcObject = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopCameraProcessing();
+  }
+
+  onDateChange(event: any): void {
+    this.editpatient.strDob =
+      this.datePipe.transform(
+        event,
+        'MM-dd-yyyy'
+      ) ?? '';
+  }
+
+  submitForm(): void {
+    if (this.editpatient.name === '') {
+      this.errorDisplay = true;
+      this.errorMessage = 'Name is Required';
+      return;
+    }
+
+    if (this.editpatient.nationalno === '') {
+      this.errorDisplay = true;
+      this.errorMessage = 'National is Required';
+      return;
+    }
+
+    if (this.editpatient.mobileno === '') {
+      this.errorDisplay = true;
+      this.errorMessage = 'Mobile No is Required';
+      return;
+    }
+
+    this.patientsService
+      .updatePatient(this.editpatient)
+      .subscribe({
+        next: () => {
+          if (this.blob) {
+            const formData =
+              new FormData();
+
+            formData.append(
+              'file',
+              this.blob,
+              'captured-face.png'
+            );
+
+            this.http
+              .post(
+                `https://localhost:7183/api/Patients/uploadFaceImage/${this.editpatient.id}`,
+                formData
+              )
+              .subscribe(
+                (uploadResponse: any) => {
+                  console.log(
+                    'Image uploaded successfully:',
+                    uploadResponse
+                  );
+
+                  this.showSuccessfullyMessage = true;
+                  this.ref.close('Updated');
+                },
+                uploadError => {
+                  console.error(
+                    'Image upload failed:',
+                    uploadError
+                  );
+
+                  this.errorMessage =
+                    'Failed to upload image';
+
+                  this.errorDisplay = true;
+                }
+              );
+          } else {
+            this.showSuccessfullyMessage = true;
+            this.ref.close('Updated');
+          }
+        },
+
+        error: updateError => {
+          console.error(
+            'Patient update failed:',
+            updateError
+          );
+
+          this.errorMessage =
+            'Failed to update patient data';
+
+          this.errorDisplay = true;
+        }
+      });
+  }
 }
-
-
-
- // Upload the patient data first
-    // this.http.post("https://localhost:7266/api/Patients/addPatient", this.Editpatient).subscribe(
-    //   (patientIdRes: any) => {
-    //     if(this.blob==undefined)
-    //       {
-    //         console.log("no image");
-    //         this.router.navigate(['/']);
-    //       }
-
-    //       const formData = new FormData();
-    //       formData.append('file', this.blob, 'captured-face.png');
-    //     // Then upload the image
-    //     this.http.post(`https://localhost:7266/api/Patients/uploadFaceImage/${patientIdRes}`, formData).subscribe(
-    //       (response: any) => {
-    //         console.log('Image uploaded successfully:', response);
-
-    //         // Redirect to patients page after both operations are successful
-    //         this.router.navigate(['/']);
-    //       },
-    //       (error) => {
-    //         console.error('Error uploading image:', error);
-    //       }
-    //     );
-    //   },
-    //   (error) => {
-    //     console.error('Error:', error);
-    //   }
-    // );
-  // } else {
-  //   console.warn('Patient data is invalid. Please fill out all fields.');
-

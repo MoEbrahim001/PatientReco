@@ -6,7 +6,7 @@ export class ListPatients {
     dob: Date;
     mobileno: string;
     nationalno: string;
-     faceImg: string; // Add the faceImg property
+    faceImgUrl?:string;
 
 
 }

@@ -1,1 +1,32 @@
 /* You can add global styles to this file, and also import other style files */
+:root {
+  --app-bg: #f5f7fb;
+  --card-bg: #ffffff;
+
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #eff6ff;
+
+  --secondary: #64748b;
+
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #f59e0b;
+
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+
+  --border: #e2e8f0;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --shadow:
+    0 4px 20px rgba(15, 23, 42, 0.07);
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--text-main);
+  font-family: Arial, Helvetica, sans-serif;
+}
