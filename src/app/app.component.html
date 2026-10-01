@@ -1,2 +1,21 @@
-
 <router-outlet></router-outlet>
+
+<div
+  class="global-loading-overlay"
+  *ngIf="loading$ | async">
+
+  <div class="global-loading-box">
+
+    <div class="loading-spinner"></div>
+
+    <div class="loading-title">
+      Please wait
+    </div>
+
+    <div class="loading-text">
+      Processing your request...
+    </div>
+
+  </div>
+
+</div>
