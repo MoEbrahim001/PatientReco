@@ -338,19 +338,39 @@
 
 @media (max-width: 768px) {
   .patient-page {
-    padding: 16px;
+    padding: 12px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-header h2 {
+    font-size: 22px;
+  }
+
+  .header-icon {
+    width: 46px;
+    height: 46px;
   }
 
   .patient-card {
-    padding: 20px;
+    padding: 16px;
   }
 
   .form-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .camera-layout {
     grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .camera-placeholder {
+    min-height: 150px;
   }
 
   .camera-buttons {
@@ -361,13 +381,30 @@
     width: 100%;
   }
 
+  .captured-image {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .face-canvas {
+    width: 100%;
+    height: auto;
+    min-height: 250px;
+    max-height: 430px;
+
+    object-fit: contain;
+
+    border-radius: 10px;
+    background: #0f172a;
+  }
+
   .form-footer {
     flex-direction: column;
     align-items: stretch;
     gap: 15px;
   }
 
-  .face-canvas {
-    height: 230px;
+  .submit-button {
+    width: 100%;
   }
 }

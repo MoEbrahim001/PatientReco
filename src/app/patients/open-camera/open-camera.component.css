@@ -1,13 +1,9 @@
 .camera-popup {
   width: 100%;
   max-width: 700px;
-
   background: #ffffff;
-
   padding: 24px;
-
   border-radius: 16px;
-
   color: #1e293b;
 }
 
@@ -19,45 +15,33 @@
 .camera-header {
   display: flex;
   align-items: center;
-
   gap: 12px;
-
   margin-bottom: 20px;
 }
 
 .camera-header .header-icon {
   width: 46px;
   height: 46px;
-
   flex-shrink: 0;
-
   border-radius: 12px;
-
   background: #eff6ff;
-
   color: #2563eb;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-size: 20px;
 }
 
 .camera-header h3 {
   margin: 0;
-
   font-size: 20px;
   font-weight: 700;
-
   color: #1e293b;
 }
 
 .camera-header p {
   margin: 4px 0 0;
-
   color: #64748b;
-
   font-size: 13px;
 }
 
@@ -68,47 +52,32 @@
 
 .video-card {
   padding: 10px;
-
   background: #f8fafc;
-
-  border:
-    1px solid #e2e8f0;
-
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
 }
 
 .video-container {
   position: relative;
-
   width: 100%;
-
   overflow: hidden;
-
   background: #0f172a;
-
   border-radius: 12px;
-
   aspect-ratio: 4 / 3;
 }
 
 .video-container video {
   width: 100%;
   height: 100%;
-
   display: block;
-
   object-fit: cover;
 }
 
 .overlay-canvas {
   position: absolute;
-
-  top: 0;
-  left: 0;
-
+  inset: 0;
   width: 100%;
   height: 100%;
-
   pointer-events: none;
 }
 
@@ -119,24 +88,18 @@
 
 .face-guide {
   position: absolute;
-
   inset: 0;
-
   pointer-events: none;
-
   display: flex;
-
   align-items: center;
   justify-content: center;
 }
 
 .face-frame {
   width: 220px;
-  height: 280px;
+  aspect-ratio: 0.78 / 1;
 
-  border:
-    3px solid rgba(255, 255, 255, 0.9);
-
+  border: 3px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
 
   box-shadow:
@@ -150,68 +113,47 @@
 
 .liveness-status {
   margin-top: 16px;
-
   padding: 14px 16px;
-
   background: #eff6ff;
-
-  border:
-    1px solid #bfdbfe;
-
+  border: 1px solid #bfdbfe;
   border-radius: 10px;
-
   display: flex;
-
   align-items: center;
-
   gap: 12px;
-
   transition: 0.2s ease;
 }
 
 .liveness-success {
   background: #f0fdf4;
-
   border-color: #bbf7d0;
 }
 
 .status-icon {
   width: 38px;
   height: 38px;
-
   flex-shrink: 0;
-
   border-radius: 50%;
-
   background: #dbeafe;
-
   color: #2563eb;
-
   display: flex;
-
   align-items: center;
   justify-content: center;
 }
 
 .success-icon {
   background: #dcfce7;
-
   color: #16a34a;
 }
 
 .status-content {
   display: flex;
-
   flex-direction: column;
-
   gap: 3px;
 }
 
 .status-label {
   color: #1e40af;
-
   font-size: 13px;
-
   font-weight: 700;
 }
 
@@ -221,13 +163,11 @@
 
 .status-message {
   color: #475569;
-
   font-size: 13px;
 }
 
 .success-message {
   color: #166534;
-
   font-weight: 600;
 }
 
@@ -238,21 +178,13 @@
 
 .camera-help {
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
   margin-top: 12px;
-
   padding: 10px 12px;
-
   background: #f8fafc;
-
   border-radius: 8px;
-
   color: #64748b;
-
   font-size: 12px;
 }
 
@@ -267,97 +199,94 @@
 
 .button-container {
   display: flex;
-
   justify-content: flex-end;
-
   gap: 10px;
-
   margin-top: 20px;
-
   padding-top: 18px;
-
-  border-top:
-    1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
 }
 
 .capture-button,
 .cancel-button {
   height: 42px;
-
   padding: 0 18px;
-
   border-radius: 8px;
-
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
   font-weight: 600;
-
   cursor: pointer;
-
   transition: 0.2s ease;
 }
 
-
-/* DETECT */
-
 .capture-button {
-  border:
-    1px solid #2563eb;
-
+  border: 1px solid #2563eb;
   background: #2563eb;
-
   color: #ffffff;
 }
 
 .capture-button:hover:not(:disabled) {
   background: #1d4ed8;
-
   border-color: #1d4ed8;
 }
 
 .capture-button:disabled {
   background: #cbd5e1;
-
   border-color: #cbd5e1;
-
   color: #64748b;
-
   cursor: not-allowed;
-
   opacity: 0.8;
 }
 
-
-/* CANCEL */
-
 .cancel-button {
-  border:
-    1px solid #cbd5e1;
-
+  border: 1px solid #cbd5e1;
   background: #ffffff;
-
   color: #475569;
 }
 
 .cancel-button:hover {
   background: #f8fafc;
-
   border-color: #94a3b8;
 }
 
 
 /* ============================= */
-/* RESPONSIVE */
+/* TABLET */
 /* ============================= */
 
-@media(max-width: 600px) {
+@media (max-width: 768px) {
+  .camera-popup {
+    max-width: 100%;
+  }
+
+  .face-frame {
+    width: 65%;
+    max-width: 280px;
+  }
+}
+
+
+/* ============================= */
+/* MOBILE */
+/* ============================= */
+
+@media (max-width: 600px) {
 
   .camera-popup {
-    padding: 16px;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .camera-header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .camera-header .header-icon {
+    width: 42px;
+    height: 42px;
   }
 
   .camera-header h3 {
@@ -368,19 +297,43 @@
     font-size: 12px;
   }
 
+  .video-card {
+    padding: 6px;
+  }
+
+  .video-container {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    max-height: 72vh;
+  }
+
   .face-frame {
-    width: 160px;
-    height: 210px;
+    width: 72%;
+    max-width: 280px;
+    height: auto;
+    aspect-ratio: 0.78 / 1;
+    border-width: 3px;
+  }
+
+  .liveness-status {
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .camera-help {
+    margin-top: 10px;
   }
 
   .button-container {
     flex-direction: column-reverse;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
   }
 
   .capture-button,
   .cancel-button {
     width: 100%;
-
     justify-content: center;
   }
 }
