@@ -5,9 +5,7 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { NgForm } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import {
   FaceLandmarker,
@@ -76,8 +74,6 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private patientsService: PatientsService,
-    private router: Router,
-    private http: HttpClient,
     private ref: DynamicDialogRef,
     private config: DynamicDialogConfig
   ) {}
@@ -535,34 +531,26 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.http
-      .post(
-        'https://localhost:7183/api/Patients/addPatient',
-        this.patientData
-      )
-      .subscribe(
-        (patientIdRes: any) => {
+    this.patientsService
+      .addPatient(this.patientData)
+      .subscribe({
+        next: (patientId: number) => {
           if (!this.blob) {
-            console.log('No image uploaded');
-            this.router.navigate(['/']);
+            this.ref.close('Updated');
             return;
           }
 
           const formData = new FormData();
-
           formData.append(
             'file',
             this.blob,
             'captured-face.png'
           );
 
-          this.http
-            .post(
-              `https://localhost:7183/api/Patients/uploadFaceImage/${patientIdRes}`,
-              formData
-            )
-            .subscribe(
-              (response: any) => {
+          this.patientsService
+            .uploadFaceImage(formData, patientId)
+            .subscribe({
+              next: response => {
                 console.log(
                   'Image uploaded successfully:',
                   response
@@ -570,29 +558,30 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
 
                 this.ref.close('Updated');
               },
-              error => {
+              error: error => {
                 console.error(
                   'Error uploading image:',
                   error
                 );
 
                 this.errorDisplay = true;
-                this.errorMessage = 'Failed to upload face image.';
+                this.errorMessage =
+                  'Failed to upload face image.';
               }
-            );
+            });
         },
-        error => {
+        error: error => {
           if (error?.error?.status === 'NationalIdExists') {
             this.errorDisplay = true;
             this.errorMessage = error.error.errorMsg;
+          } else {
+            this.errorDisplay = true;
+            this.errorMessage = 'Failed to add patient.';
           }
 
-          console.error(
-            'Error:',
-            error?.error?.status ?? error
-          );
+          console.error('Error:', error);
         }
-      );
+      });
   }
 
   isPatientDataValid(): boolean {

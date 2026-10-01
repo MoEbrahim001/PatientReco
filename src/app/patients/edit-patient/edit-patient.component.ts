@@ -5,8 +5,6 @@ import {
   OnInit,
   ViewChild
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import {
@@ -86,9 +84,6 @@ export class EditPatientComponent implements OnInit, OnDestroy {
   private eyesWereClosed = false;
 
   constructor(
-    private http: HttpClient,
-    private route: ActivatedRoute,
-    private router: Router,
     private patientsService: PatientsService,
     private datePipe: DatePipe,
     private ref: DynamicDialogRef,
@@ -598,49 +593,46 @@ export class EditPatientComponent implements OnInit, OnDestroy {
       .updatePatient(this.editpatient)
       .subscribe({
         next: () => {
-          if (this.blob) {
-            const formData =
-              new FormData();
-
-            formData.append(
-              'file',
-              this.blob,
-              'captured-face.png'
-            );
-
-            this.http
-              .post(
-                `https://localhost:7183/api/Patients/uploadFaceImage/${this.editpatient.id}`,
-                formData
-              )
-              .subscribe(
-                (uploadResponse: any) => {
-                  console.log(
-                    'Image uploaded successfully:',
-                    uploadResponse
-                  );
-
-                  this.showSuccessfullyMessage = true;
-                  this.ref.close('Updated');
-                },
-                uploadError => {
-                  console.error(
-                    'Image upload failed:',
-                    uploadError
-                  );
-
-                  this.errorMessage =
-                    'Failed to upload image';
-
-                  this.errorDisplay = true;
-                }
-              );
-          } else {
+          if (!this.blob) {
             this.showSuccessfullyMessage = true;
             this.ref.close('Updated');
+            return;
           }
-        },
 
+          const formData = new FormData();
+          formData.append(
+            'file',
+            this.blob,
+            'captured-face.png'
+          );
+
+          this.patientsService
+            .uploadFaceImage(
+              formData,
+              this.editpatient.id
+            )
+            .subscribe({
+              next: uploadResponse => {
+                console.log(
+                  'Image uploaded successfully:',
+                  uploadResponse
+                );
+
+                this.showSuccessfullyMessage = true;
+                this.ref.close('Updated');
+              },
+              error: uploadError => {
+                console.error(
+                  'Image upload failed:',
+                  uploadError
+                );
+
+                this.errorMessage =
+                  'Failed to upload image';
+                this.errorDisplay = true;
+              }
+            });
+        },
         error: updateError => {
           console.error(
             'Patient update failed:',
@@ -649,9 +641,9 @@ export class EditPatientComponent implements OnInit, OnDestroy {
 
           this.errorMessage =
             'Failed to update patient data';
-
           this.errorDisplay = true;
         }
       });
   }
+
 }
