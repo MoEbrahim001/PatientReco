@@ -1,223 +1,274 @@
-<div class="patient-page">
+<div class="patient-page edit-mode">
+  <div class="page-glow glow-left"></div>
+  <div class="page-glow glow-right"></div>
 
-  <div class="page-header">
-    <div>
-      <h2>Edit Patient</h2>
-      <p>Update patient information and optionally register a new verified live face.</p>
-    </div>
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-heading">
+        <span class="eyebrow">Patient management</span>
+        <h2>Edit Patient</h2>
+        <p>Update patient information and optionally refresh the biometric face profile.</p>
+      </div>
 
-    <div class="header-icon">
-      <i class="pi pi-user-edit"></i>
-    </div>
-  </div>
-
-  <div class="patient-card">
-
-    <form
-      (ngSubmit)="submitForm()"
-      #patientForm="ngForm"
-      class="patient-form">
-
-      <div class="section-header">
-        <div class="section-icon">
-          <i class="pi pi-user"></i>
+      <div class="header-badge">
+        <div class="header-icon">
+          <i class="pi pi-user-edit"></i>
         </div>
-
         <div>
-          <h4>Patient Information</h4>
-          <p>Update the patient's personal details.</p>
+          <strong>Editing profile</strong>
+          <span>Changes are saved securely</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="journey-strip">
+      <div class="journey-step active">
+        <span>1</span>
+        <div>
+          <strong>Patient details</strong>
+          <small>Review information</small>
         </div>
       </div>
 
-      <div class="form-grid">
+      <div class="journey-line"></div>
 
-        <div class="form-field">
-          <label>
-            Name
-            <span class="required">*</span>
-          </label>
-
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="editpatient.name"
-            name="name"
-            placeholder="Patient name"
-            required />
+      <div class="journey-step" [class.complete]="livenessPassed">
+        <span><i class="pi pi-camera"></i></span>
+        <div>
+          <strong>Optional face update</strong>
+          <small>Re-enroll if needed</small>
         </div>
-
-        <div class="form-field">
-          <label>
-            National Number
-            <span class="required">*</span>
-          </label>
-
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="editpatient.nationalno"
-            name="nationalno"
-            placeholder="National number"
-            required />
-        </div>
-
-        <div class="form-field">
-          <label>
-            Mobile Number
-            <span class="required">*</span>
-          </label>
-
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="editpatient.mobileno"
-            name="mobileno"
-            placeholder="Mobile number"
-            required />
-        </div>
-
-        <div class="form-field">
-          <label>Date of Birth</label>
-
-          <p-calendar
-            name="dob"
-            [(ngModel)]="editpatient.dob"
-            [showIcon]="true"
-            dateFormat="dd-mm-yy"
-            (onSelect)="onDateChange($event)"
-            [style]="{ width: '100%' }">
-          </p-calendar>
-        </div>
-
       </div>
 
-      <div class="face-section">
+      <div class="journey-line" [class.complete]="!!blob"></div>
 
-        <div class="section-header">
-          <div class="section-icon">
-            <i class="pi pi-camera"></i>
-          </div>
-
-          <div>
-            <h4>Update Live Face</h4>
-            <p>Only needed if you want to replace the patient's current face image.</p>
-          </div>
+      <div class="journey-step" [class.complete]="!!blob">
+        <span><i class="pi pi-check"></i></span>
+        <div>
+          <strong>Save changes</strong>
+          <small>Update patient record</small>
         </div>
+      </div>
+    </div>
 
-        <div
-          class="human-status"
-          [class.human-status-verified]="livenessPassed">
+    <div class="patient-card">
+      <form
+        (ngSubmit)="submitForm()"
+        #patientForm="ngForm"
+        class="patient-form">
 
-          <div
-            class="human-status-icon"
-            [class.verified-icon]="livenessPassed">
-
-            <i
-              class="pi"
-              [class.pi-eye]="!livenessPassed"
-              [class.pi-check-circle]="livenessPassed">
-            </i>
-          </div>
-
-          <div>
-            <strong>
-              {{ livenessPassed ? 'Human verified' : 'Human verification' }}
-            </strong>
-
-            <span>
-              {{ livenessMessage }}
-            </span>
-          </div>
-
-        </div>
-
-        <div class="camera-layout">
-
-          <div class="camera-actions">
-
-            <div class="camera-placeholder">
-              <i class="pi pi-shield"></i>
-
-              <strong>Live Human Check</strong>
-
-              <span>
-                Open the camera, keep one face visible,
-                then blink once to verify liveness.
-              </span>
+        <section class="form-section personal-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="pi pi-id-card"></i>
             </div>
 
-            <div class="camera-buttons">
+            <div class="section-copy">
+              <span class="section-kicker">Step 01</span>
+              <h4>Patient Information</h4>
+              <p>Keep the patient record accurate and up to date.</p>
+            </div>
+          </div>
 
-              <button
-                pButton
-                type="button"
-                icon="pi pi-camera"
-                label="Open Camera"
-                class="primary-button"
-                (click)="openCamera()">
-              </button>
-
-              <button
-                pButton
-                type="button"
-                icon="pi pi-image"
-                label="Capture Verified Face"
-                class="secondary-button"
-                (click)="captureImage()"
-                [disabled]="!patientForm.valid || !livenessPassed || !faceDetected">
-              </button>
-
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Name <span class="required">*</span></label>
+              <div class="input-shell">
+                <i class="pi pi-user"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="editpatient.name"
+                  name="name"
+                  placeholder="Patient name"
+                  required />
+              </div>
+              <small>Update the patient's display name.</small>
             </div>
 
+            <div class="form-field">
+              <label>National number <span class="required">*</span></label>
+              <div class="input-shell">
+                <i class="pi pi-credit-card"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="editpatient.nationalno"
+                  name="nationalno"
+                  placeholder="National number"
+                  required />
+              </div>
+              <small>Unique identity number for this patient.</small>
+            </div>
+
+            <div class="form-field">
+              <label>Mobile number <span class="required">*</span></label>
+              <div class="input-shell">
+                <i class="pi pi-phone"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="editpatient.mobileno"
+                  name="mobileno"
+                  placeholder="Mobile number"
+                  required />
+              </div>
+              <small>Used for search and patient contact.</small>
+            </div>
+
+            <div class="form-field">
+              <label>Date of birth</label>
+              <div class="calendar-shell">
+                <i class="pi pi-calendar"></i>
+                <p-calendar
+                  name="dob"
+                  [(ngModel)]="editpatient.dob"
+                  [showIcon]="true"
+                  dateFormat="dd-mm-yy"
+                  (onSelect)="onDateChange($event)"
+                  [style]="{ width: '100%' }">
+                </p-calendar>
+              </div>
+              <small>Change only if the current date is incorrect.</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section face-section">
+          <div class="section-header">
+            <div class="section-icon biometric-icon">
+              <i class="pi pi-scan"></i>
+            </div>
+
+            <div class="section-copy">
+              <span class="section-kicker">Step 02</span>
+              <h4>Update Live Face</h4>
+              <p>Optional. Capture a new verified face only when the patient image needs replacing.</p>
+            </div>
+
+            <div class="verification-chip" [class.verified-chip]="livenessPassed">
+              <i class="pi" [class.pi-shield]="!livenessPassed" [class.pi-verified]="livenessPassed"></i>
+              {{ livenessPassed ? 'Verified' : 'Optional' }}
+            </div>
           </div>
 
           <div
-            class="captured-image"
-            [class.verified-preview]="livenessPassed">
+            class="human-status"
+            [class.human-status-verified]="livenessPassed">
 
-            <div class="image-title">
-              <i class="pi pi-image"></i>
-              Live Camera / Captured Face
+            <div
+              class="human-status-icon"
+              [class.verified-icon]="livenessPassed">
+              <i
+                class="pi"
+                [class.pi-eye]="!livenessPassed"
+                [class.pi-check-circle]="livenessPassed">
+              </i>
             </div>
 
-            <canvas
-              #canvasElement
-              class="face-canvas">
-            </canvas>
+            <div class="human-status-copy">
+              <strong>{{ livenessPassed ? 'Human verified' : 'Face update not started' }}</strong>
+              <span>{{ livenessMessage }}</span>
+            </div>
 
+            <div class="status-meter">
+              <span [class.active]="faceDetected"></span>
+              <span [class.active]="livenessPassed"></span>
+              <span [class.active]="!!blob"></span>
+            </div>
           </div>
 
+          <div class="camera-layout">
+            <div class="camera-actions">
+              <div class="camera-placeholder">
+                <div class="camera-orb edit-orb">
+                  <i class="pi pi-refresh"></i>
+                  <span class="orb-ring ring-one"></span>
+                  <span class="orb-ring ring-two"></span>
+                </div>
+
+                <strong>Refresh biometric profile</strong>
+                <span>Open the camera only if you want to replace the current face image with a new verified capture.</span>
+
+                <div class="camera-tips">
+                  <span><i class="pi pi-sun"></i> Good lighting</span>
+                  <span><i class="pi pi-user"></i> One face</span>
+                  <span><i class="pi pi-eye"></i> Natural blink</span>
+                </div>
+              </div>
+
+              <div class="camera-buttons">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-camera"
+                  label="Open Camera"
+                  class="primary-button"
+                  (click)="openCamera()">
+                </button>
+
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-sparkles"
+                  label="Capture Verified Face"
+                  class="secondary-button"
+                  (click)="captureImage()"
+                  [disabled]="!patientForm.valid || !livenessPassed || !faceDetected">
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="captured-image"
+              [class.verified-preview]="livenessPassed">
+
+              <div class="image-title">
+                <div>
+                  <i class="pi pi-image"></i>
+                  Face preview
+                </div>
+
+                <span class="preview-state" [class.preview-ready]="!!blob">
+                  {{ blob ? 'New face captured' : 'Current session' }}
+                </span>
+              </div>
+
+              <div class="preview-frame">
+                <canvas #canvasElement class="face-canvas"></canvas>
+                <div class="preview-grid"></div>
+                <div class="preview-corners">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="form-footer">
+          <div class="required-info">
+            <i class="pi pi-info-circle"></i>
+            <span>Saving without a new capture keeps the current face image.</span>
+          </div>
+
+          <button
+            pButton
+            type="submit"
+            icon="pi pi-check"
+            label="Save Changes"
+            class="submit-button">
+          </button>
         </div>
 
-      </div>
-
-      <div class="form-footer">
-
-        <span class="required-info">
-          Saving without capturing a new face keeps the current image.
-        </span>
-
-        <button
-          pButton
-          type="submit"
-          icon="pi pi-check"
-          label="Save Changes"
-          class="submit-button">
-        </button>
-
-      </div>
-
-      <video
-        #videoElement
-        width="640"
-        height="480"
-        style="display:none;">
-      </video>
-
-    </form>
-
+        <video
+          #videoElement
+          width="640"
+          height="480"
+          style="display:none;">
+        </video>
+      </form>
+    </div>
   </div>
-
 </div>
 
 <p-dialog
@@ -236,7 +287,6 @@
   <div class="dialog-message success-dialog-message">
     {{ SuccessfullyMessage }}
   </div>
-
 </p-dialog>
 
 <p-dialog
@@ -255,5 +305,4 @@
   <div class="dialog-message error-message">
     {{ errorMessage }}
   </div>
-
 </p-dialog>

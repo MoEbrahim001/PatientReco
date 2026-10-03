@@ -38,13 +38,14 @@
           },
           "configurations": {
             "production": {
-              "budgets": [
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "6kb",
-                  "maximumError": "10kb"
-                }
-              ],
+           "budgets": [
+  {
+    "type": "anyComponentStyle",
+    "maximumWarning": "18kb",
+    "maximumError": "25kb"
+  }
+],
+
               "outputHashing": "all"
             },
             "development": {
