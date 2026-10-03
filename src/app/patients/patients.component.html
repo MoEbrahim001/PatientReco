@@ -1,254 +1,350 @@
 <div class="patients-page">
 
-  <!-- Header -->
-  <div class="patients-header">
+  <!-- Ambient background -->
+  <div class="ambient-orb ambient-orb-one"></div>
+  <div class="ambient-orb ambient-orb-two"></div>
 
-    <div>
+  <div class="page-shell">
 
-      <h2>Patients</h2>
+    <!-- ========================= -->
+    <!-- HERO / HEADER -->
+    <!-- ========================= -->
+    <header class="patients-hero">
 
-      <p>
-        Manage patients and identify patients
-        using face recognition.
-      </p>
+      <div class="hero-copy">
 
-    </div>
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          Patient Management
+        </div>
 
+        <h1>
+          Patients
+          <span class="hero-accent">Workspace</span>
+        </h1>
 
-    <button
-      pButton
-      type="button"
-      icon="pi pi-plus"
-      label="Add Patient"
-      class="add-patient-btn"
-      (click)="onAdd()">
-    </button>
+        <p>
+          Manage patient records, enroll live faces and identify patients
+          securely with face recognition.
+        </p>
 
-  </div>
+        <div class="hero-meta">
+          <div class="meta-pill">
+            <i class="pi pi-users"></i>
+            <span>{{ patientResult.totalResults || 0 }} Patients</span>
+          </div>
 
+          <div class="meta-pill meta-pill-success">
+            <span class="live-dot"></span>
+            <span>Face ID Ready</span>
+          </div>
+        </div>
 
-  <!-- Search / Tools -->
-  <div class="toolbar-card">
+      </div>
 
-    <div class="search-box">
+      <button
+        pButton
+        type="button"
+        class="add-patient-btn"
+        (click)="onAdd()">
 
-      <i class="pi pi-search"></i>
+        <span class="button-icon-wrap">
+          <i class="pi pi-plus"></i>
+        </span>
 
-      <input
-        type="text"
-        pInputText
-        [(ngModel)]="patientParams.searchtext"
-        (input)="onSearchh()"
-        placeholder="Search by patient name or mobile number"
-      />
+        <span class="button-copy">
+          <strong>Add Patient</strong>
+          <small>Create a new profile</small>
+        </span>
 
-    </div>
+      </button>
 
-
-    <button
-      pButton
-      type="button"
-      icon="pi pi-camera"
-      label="Face Recognition"
-      class="camera-search-btn"
-      (click)="openCamera()">
-    </button>
-
-  </div>
-
-
-  <!-- Table Card -->
-  <div class="patients-table-card">
-
-    <p-table
-      [value]="patientResult.results"
-      [lazy]="true"
-      [paginator]="true"
-      [rows]="10"
-      [totalRecords]="patientResult.totalResults"
-      (onLazyLoad)="loadPatients($event)"
-      styleClass="patients-table">
-
-      <!-- Header -->
-      <ng-template pTemplate="header">
-
-        <tr>
-
-          <th>ID</th>
-
-          <th>Patient</th>
-
-          <th>Mobile</th>
-
-          <th>Date of Birth</th>
-
-          <th>National No.</th>
-
-          <th>Actions</th>
-
-        </tr>
-
-      </ng-template>
+    </header>
 
 
-      <!-- Body -->
-      <ng-template
-        pTemplate="body"
-        let-patient>
+    <!-- ========================= -->
+    <!-- QUICK ACTIONS -->
+    <!-- ========================= -->
+    <section class="toolbar-card">
 
-        <tr>
+      <div class="search-box">
+        <div class="search-icon">
+          <i class="pi pi-search"></i>
+        </div>
 
-          <td>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="patientParams.searchtext"
+          (input)="onSearchh()"
+          placeholder="Search by patient name or mobile number"
+        />
 
-            <span class="patient-id">
-              #{{ patient.id }}
-            </span>
-
-          </td>
+        <span class="search-hint">Search</span>
+      </div>
 
 
-          <td>
+      <button
+        pButton
+        type="button"
+        class="camera-search-btn"
+        (click)="openCamera()">
 
-            <div class="patient-info">
+        <span class="scan-button-icon">
+          <i class="pi pi-camera"></i>
+          <span class="scan-pulse"></span>
+        </span>
 
-              <div class="patient-avatar">
+        <span>
+          <strong>Face Recognition</strong>
+          <small>Identify a patient</small>
+        </span>
 
-                <img
-                  *ngIf="patient.faceImgUrl"
-                  [src]="patient.faceImgUrl"
-                  alt="Patient"
-                />
+        <i class="pi pi-arrow-right arrow-icon"></i>
 
-                <i
-                  *ngIf="!patient.faceImgUrl"
-                  class="pi pi-user">
-                </i>
+      </button>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- PATIENT DIRECTORY -->
+    <!-- ========================= -->
+    <section class="patients-table-card">
+
+      <div class="table-card-header">
+
+        <div>
+          <div class="section-kicker">Directory</div>
+          <h2>Patient Records</h2>
+          <p>View, search and manage registered patients.</p>
+        </div>
+
+        <div class="record-count">
+          <span>{{ patientResult.totalResults || 0 }}</span>
+          <small>Total records</small>
+        </div>
+
+      </div>
+
+
+      <p-table
+        [value]="patientResult.results"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="10"
+        [totalRecords]="patientResult.totalResults"
+        (onLazyLoad)="loadPatients($event)"
+        styleClass="patients-table">
+
+        <!-- Header -->
+        <ng-template pTemplate="header">
+          <tr>
+            <th>ID</th>
+            <th>Patient</th>
+            <th>Mobile</th>
+            <th>Date of Birth</th>
+            <th>National No.</th>
+            <th class="actions-heading">Actions</th>
+          </tr>
+        </ng-template>
+
+
+        <!-- Body -->
+        <ng-template
+          pTemplate="body"
+          let-patient>
+
+          <tr class="patient-row">
+
+            <td data-label="ID">
+              <span class="patient-id">
+                #{{ patient.id }}
+              </span>
+            </td>
+
+
+            <td data-label="Patient">
+
+              <div class="patient-info">
+
+                <div class="patient-avatar">
+
+                  <img
+                    *ngIf="patient.faceImgUrl"
+                    [src]="patient.faceImgUrl"
+                    [alt]="patient.name || 'Patient'"
+                  />
+
+                  <i
+                    *ngIf="!patient.faceImgUrl"
+                    class="pi pi-user">
+                  </i>
+
+                  <span class="avatar-status"></span>
+
+                </div>
+
+                <div class="patient-name">
+
+                  <strong>
+                    {{ patient.name }}
+                  </strong>
+
+                  <small>
+                    <i class="pi pi-verified"></i>
+                    Registered patient
+                  </small>
+
+                </div>
 
               </div>
 
+            </td>
 
-              <div class="patient-name">
 
-                <strong>
-                  {{ patient.name }}
-                </strong>
+            <td data-label="Mobile">
+              <div class="cell-with-icon">
+                <span class="cell-icon">
+                  <i class="pi pi-phone"></i>
+                </span>
 
-                <small>
-                  Patient
-                </small>
+                <span>
+                  {{ patient.mobileno || '-' }}
+                </span>
+              </div>
+            </td>
+
+
+            <td data-label="Date of Birth">
+              <div class="cell-with-icon">
+                <span class="cell-icon">
+                  <i class="pi pi-calendar"></i>
+                </span>
+
+                <span>
+                  {{
+                    patient.dob
+                    | date:'dd MMM yyyy'
+                  }}
+                </span>
+              </div>
+            </td>
+
+
+            <td data-label="National No.">
+              <span class="national-number">
+                {{ patient.nationalno || '-' }}
+              </span>
+            </td>
+
+
+            <td data-label="Actions">
+
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="action-btn edit-btn"
+                  (click)="onEdit(patient)"
+                  pTooltip="Edit Patient"
+                  tooltipPosition="top">
+
+                  <i class="pi pi-pencil"></i>
+
+                </button>
+
+
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  (click)="confirmDelete(patient)"
+                  pTooltip="Delete Patient"
+                  tooltipPosition="top">
+
+                  <i class="pi pi-trash"></i>
+
+                </button>
 
               </div>
 
-            </div>
+            </td>
 
-          </td>
+          </tr>
 
-
-          <td>
-            {{ patient.mobileno || '-' }}
-          </td>
+        </ng-template>
 
 
-          <td>
+        <!-- Empty -->
+        <ng-template pTemplate="emptymessage">
 
-            {{
-              patient.dob
-              | date:'dd MMM yyyy'
-            }}
+          <tr>
 
-          </td>
+            <td colspan="6">
 
+              <div class="empty-state">
 
-          <td>
+                <div class="empty-illustration">
+                  <div class="empty-orbit"></div>
+                  <div class="empty-icon">
+                    <i class="pi pi-users"></i>
+                  </div>
+                </div>
 
-            <span class="national-number">
-              {{ patient.nationalno || '-' }}
-            </span>
+                <div class="empty-badge">
+                  No records yet
+                </div>
 
-          </td>
+                <h3>No patients found</h3>
 
+                <p>
+                  Try changing your search, or create a new patient profile.
+                </p>
 
-          <td>
+                <button
+                  pButton
+                  type="button"
+                  class="empty-add-btn"
+                  (click)="onAdd()">
 
-            <div class="action-buttons">
+                  <i class="pi pi-plus"></i>
+                  Add Patient
 
-              <button
-                type="button"
-                class="action-btn edit-btn"
-                (click)="onEdit(patient)"
-                pTooltip="Edit Patient">
+                </button>
 
-                <i class="pi pi-pencil"></i>
+              </div>
 
-              </button>
+            </td>
 
+          </tr>
 
-              <button
-                type="button"
-                class="action-btn delete-btn"
-                (click)="confirmDelete(patient)"
-                pTooltip="Delete Patient">
+        </ng-template>
 
-                <i class="pi pi-trash"></i>
+      </p-table>
 
-              </button>
-
-            </div>
-
-          </td>
-
-        </tr>
-
-      </ng-template>
+    </section>
 
 
-      <!-- Empty -->
-      <ng-template pTemplate="emptymessage">
+    <!-- Hidden camera helpers kept for existing functionality -->
+    <video
+      #videoElement
+      width="640"
+      height="480"
+      style="display:none;">
+    </video>
 
-        <tr>
-
-          <td colspan="6">
-
-            <div class="empty-state">
-
-              <i class="pi pi-users"></i>
-
-              <h4>No patients found</h4>
-
-              <p>
-                Try another search or add
-                a new patient.
-              </p>
-
-            </div>
-
-          </td>
-
-        </tr>
-
-      </ng-template>
-
-    </p-table>
+    <canvas
+      #canvasElement
+      style="display:none;">
+    </canvas>
 
   </div>
-
-
-  <video
-    #videoElement
-    width="640"
-    height="480"
-    style="display:none;">
-  </video>
-
-  <canvas
-    #canvasElement
-    style="display:none;">
-  </canvas>
 
 </div>
 
 
-<p-confirmDialog>
+<p-confirmDialog
+  styleClass="premium-confirm-dialog">
 </p-confirmDialog>
 
 
@@ -256,15 +352,21 @@
   appendTo="body"
   [modal]="true"
   [(visible)]="showSuccessfullyMessage"
-  [style]="{ width: '400px' }">
+  [style]="{ width: 'min(440px, calc(100vw - 32px))' }"
+  styleClass="premium-dialog">
 
   <ng-template pTemplate="header">
 
     <div class="success-dialog-header">
 
-      <i class="pi pi-check-circle"></i>
+      <span class="dialog-status-icon success">
+        <i class="pi pi-check"></i>
+      </span>
 
-      {{ SuccessfullyHeader }}
+      <div>
+        <span class="dialog-eyebrow">Completed</span>
+        <strong>{{ SuccessfullyHeader }}</strong>
+      </div>
 
     </div>
 
@@ -272,7 +374,13 @@
 
 
   <div class="success-dialog-message">
-    {{ SuccessfullyMessage }}
+
+    <i class="pi pi-sparkles"></i>
+
+    <span>
+      {{ SuccessfullyMessage }}
+    </span>
+
   </div>
 
 </p-dialog>
@@ -282,15 +390,21 @@
   appendTo="body"
   [modal]="true"
   [(visible)]="errorDisplay"
-  [style]="{ width: '400px' }">
+  [style]="{ width: 'min(440px, calc(100vw - 32px))' }"
+  styleClass="premium-dialog">
 
   <ng-template pTemplate="header">
 
     <div class="error-dialog-header">
 
-      <i class="pi pi-exclamation-circle"></i>
+      <span class="dialog-status-icon error">
+        <i class="pi pi-exclamation-triangle"></i>
+      </span>
 
-      Error
+      <div>
+        <span class="dialog-eyebrow">Something went wrong</span>
+        <strong>Error</strong>
+      </div>
 
     </div>
 
@@ -298,7 +412,13 @@
 
 
   <div class="error-dialog-message">
-    {{ errorMessage }}
+
+    <i class="pi pi-info-circle"></i>
+
+    <span>
+      {{ errorMessage }}
+    </span>
+
   </div>
 
 </p-dialog>

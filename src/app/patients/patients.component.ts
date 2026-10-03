@@ -23,6 +23,7 @@ export class PatientsComponent implements OnInit {
   errorMessage = '';
 
   patientParams!: PatientParams;
+
   patientResult: PatientResult = {
     results: [],
     totalResults: 0
