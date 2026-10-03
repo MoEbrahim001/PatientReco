@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/backend/:path*",
+      "destination": "https://moebrahim001-001-site1.ftempurl.com/api/:path*"
+    }
+  ]
+}
