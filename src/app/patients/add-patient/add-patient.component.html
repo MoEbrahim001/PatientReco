@@ -145,7 +145,7 @@
             <div class="section-copy">
               <span class="section-kicker">Step 02</span>
               <h4>Live Face Enrollment</h4>
-              <p>Verify a real person with a blink, then capture a clean face image.</p>
+              <p>Verify a real person with a blink. The same live face is captured immediately after verification.</p>
             </div>
 
             <div class="verification-chip" [class.verified-chip]="livenessPassed">
@@ -190,7 +190,7 @@
                 </div>
 
                 <strong>Biometric capture</strong>
-                <span>Open the camera, keep one face centered, blink once, then capture the verified face.</span>
+                <span>Open the camera, keep one face centered and blink once. Capture happens automatically right after verification.</span>
 
                 <div class="camera-tips">
                   <span><i class="pi pi-sun"></i> Good lighting</span>
@@ -213,12 +213,10 @@
                 <button
                   pButton
                   type="button"
-                  icon="pi pi-sparkles"
-                  label="Capture Verified Face"
+                  icon="pi pi-shield"
+                  [label]="blob ? 'Captured Securely' : 'Auto Capture After Blink'"
                   class="secondary-button"
-                  (click)="captureImage()"
-                  [disabled]="!patientForm.valid || !livenessPassed || !faceDetected"
-                  pTooltip="Capture verified human face">
+                  disabled>
                 </button>
               </div>
             </div>

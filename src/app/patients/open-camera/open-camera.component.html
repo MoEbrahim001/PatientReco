@@ -11,7 +11,7 @@
       <div class="header-copy">
         <span class="eyebrow">Secure biometric check</span>
         <h3>Face Recognition</h3>
-        <p>Center your face, blink once, then let the system verify your identity.</p>
+        <p>Center your face and blink once. The verified live face is captured and recognized immediately.</p>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
       <span class="step-number">3</span>
       <div>
         <strong>Match</strong>
-        <small>Ready for recognition</small>
+        <small>Auto recognition</small>
       </div>
     </div>
   </div>
@@ -153,11 +153,10 @@
     <button
       type="button"
       class="capture-button"
-      (click)="captureAndDetectFace()"
-      [disabled]="!livenessPassed">
+      disabled>
       <span class="button-glow"></span>
-      <i class="pi pi-sparkles"></i>
-      Detect Patient
+      <i class="pi pi-shield"></i>
+      Auto Detect After Blink
     </button>
   </div>
 </div>

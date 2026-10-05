@@ -83,6 +83,10 @@ export class EditPatientComponent implements OnInit, OnDestroy {
   private eyesWereOpen = false;
   private eyesWereClosed = false;
 
+  private livenessVerifiedAt = 0;
+  private readonly LIVENESS_MAX_AGE_MS = 1200;
+  private captureInProgress = false;
+
   constructor(
     private patientsService: PatientsService,
     private datePipe: DatePipe,
@@ -217,22 +221,23 @@ export class EditPatientComponent implements OnInit, OnDestroy {
     if (faces.length === 0) {
       this.faceDetected = false;
       this.boundingBox = null;
-      this.resetBlinkOnly();
-      this.livenessMessage = 'No human face detected.';
+      this.invalidateLiveness('No human face detected.');
       return;
     }
 
     if (faces.length > 1) {
       this.faceDetected = false;
       this.boundingBox = null;
-      this.resetBlinkOnly();
-      this.livenessMessage =
-        'More than one face detected. Keep only one person in view.';
+      this.invalidateLiveness(
+        'More than one face detected. Keep only one person in view.'
+      );
       return;
     }
 
+    const landmarks = faces[0];
+
     const box = this.getFaceBoundingBox(
-      faces[0],
+      landmarks,
       canvas.width,
       canvas.height
     );
@@ -240,20 +245,17 @@ export class EditPatientComponent implements OnInit, OnDestroy {
     if (!box) {
       this.faceDetected = false;
       this.boundingBox = null;
-      this.resetBlinkOnly();
-      this.livenessMessage =
-        'Move closer and keep your full face visible.';
+      this.invalidateLiveness(
+        'Move closer and keep your full face visible.'
+      );
       return;
     }
 
     this.faceDetected = true;
     this.boundingBox = box;
 
-    ctx.strokeStyle =
-      this.livenessPassed ? '#16a34a' : '#f59e0b';
-
+    ctx.strokeStyle = this.livenessPassed ? '#16a34a' : '#f59e0b';
     ctx.lineWidth = 4;
-
     ctx.strokeRect(
       box.x,
       box.y,
@@ -322,128 +324,114 @@ export class EditPatientComponent implements OnInit, OnDestroy {
 
   private processBlink(result: FaceLandmarkerResult): void {
     if (this.livenessPassed) {
-      this.livenessMessage =
-        'Live human verified. Ready to capture.';
+      if (!this.isLivenessFresh() && !this.captureInProgress) {
+        this.invalidateLiveness('Verification expired. Blink again.');
+        return;
+      }
+
+      this.livenessMessage = this.captureInProgress
+        ? 'Verified. Capturing this same live face...'
+        : 'Live human verified.';
       return;
     }
 
     const blendshapes = result.faceBlendshapes;
 
     if (!blendshapes || blendshapes.length !== 1) {
-      this.livenessMessage =
-        'Face detected. Keep looking at the camera.';
+      this.livenessMessage = 'Face detected. Keep looking at the camera.';
       return;
     }
 
-    const categories =
-      blendshapes[0].categories;
+    const categories = blendshapes[0].categories;
 
     const leftBlink =
-      categories.find(
-        x => x.categoryName === 'eyeBlinkLeft'
-      )?.score ?? 0;
+      categories.find(x => x.categoryName === 'eyeBlinkLeft')?.score ?? 0;
 
     const rightBlink =
-      categories.find(
-        x => x.categoryName === 'eyeBlinkRight'
-      )?.score ?? 0;
+      categories.find(x => x.categoryName === 'eyeBlinkRight')?.score ?? 0;
 
-    const eyesOpen =
-      leftBlink < 0.25 &&
-      rightBlink < 0.25;
-
-    const eyesClosed =
-      leftBlink > 0.55 &&
-      rightBlink > 0.55;
+    const eyesOpen = leftBlink < 0.25 && rightBlink < 0.25;
+    const eyesClosed = leftBlink > 0.55 && rightBlink > 0.55;
 
     if (!this.eyesWereOpen) {
       if (eyesOpen) {
         this.eyesWereOpen = true;
-        this.livenessMessage =
-          'Human face detected. Blink once to verify.';
+        this.livenessMessage = 'Human face detected. Blink once to verify.';
       } else {
-        this.livenessMessage =
-          'Open your eyes and look at the camera.';
+        this.livenessMessage = 'Open your eyes and look at the camera.';
       }
-
       return;
     }
 
-    if (
-      this.eyesWereOpen &&
-      !this.eyesWereClosed &&
-      eyesClosed
-    ) {
+    if (this.eyesWereOpen && !this.eyesWereClosed && eyesClosed) {
       this.eyesWereClosed = true;
       this.livenessMessage = 'Good. Open your eyes.';
       return;
     }
 
-    if (
-      this.eyesWereOpen &&
-      this.eyesWereClosed &&
-      eyesOpen
-    ) {
+    if (this.eyesWereOpen && this.eyesWereClosed && eyesOpen) {
       this.livenessPassed = true;
-      this.livenessMessage =
-        'Live human verified. Ready to capture.';
-
+      this.livenessVerifiedAt = performance.now();
+      this.livenessMessage = 'Live human verified. Capturing immediately...';
       console.log('HUMAN LIVENESS PASSED');
+
+      // Capture immediately after liveness so the verified person
+      // cannot be swapped with a photo or another face before capture.
+      queueMicrotask(() => this.captureImage());
     }
   }
 
   captureImage(): void {
+    if (this.captureInProgress) {
+      return;
+    }
+
     if (
       !this.livenessPassed ||
+      !this.isLivenessFresh() ||
       !this.faceDetected ||
       !this.boundingBox
     ) {
       this.errorDisplay = true;
       this.errorMessage =
-        'A live human face must be detected and verified before capturing.';
+        'A fresh live human verification is required before capturing. Blink again.';
+      this.invalidateLiveness('Verification expired. Blink again.');
       return;
     }
 
+    this.captureInProgress = true;
+    this.livenessMessage = 'Verified. Capturing this same live face...';
+
     const video = this.videoElement.nativeElement;
     const previewCanvas = this.canvasElement.nativeElement;
-
-    const {
-      x,
-      y,
-      width,
-      height
-    } = this.boundingBox;
+    const { x, y, width, height } = this.boundingBox;
 
     const sourceX = Math.max(0, Math.floor(x));
     const sourceY = Math.max(0, Math.floor(y));
-
     const sourceWidth = Math.min(
       video.videoWidth - sourceX,
       Math.floor(width)
     );
-
     const sourceHeight = Math.min(
       video.videoHeight - sourceY,
       Math.floor(height)
     );
 
     if (sourceWidth <= 0 || sourceHeight <= 0) {
+      this.captureInProgress = false;
       this.errorDisplay = true;
-      this.errorMessage =
-        'Unable to capture a valid face image.';
+      this.errorMessage = 'Unable to capture a valid face image.';
+      this.invalidateLiveness('Unable to capture the face. Blink again.');
       return;
     }
 
-    const faceCanvas =
-      document.createElement('canvas');
-
+    const faceCanvas = document.createElement('canvas');
     faceCanvas.width = sourceWidth;
     faceCanvas.height = sourceHeight;
 
-    const faceCtx =
-      faceCanvas.getContext('2d');
-
+    const faceCtx = faceCanvas.getContext('2d');
     if (!faceCtx) {
+      this.captureInProgress = false;
       return;
     }
 
@@ -462,58 +450,52 @@ export class EditPatientComponent implements OnInit, OnDestroy {
     faceCanvas.toBlob(
       blob => {
         if (!blob) {
+          this.captureInProgress = false;
           this.errorDisplay = true;
-          this.errorMessage =
-            'Could not create the captured image.';
+          this.errorMessage = 'Could not create the captured image.';
+          this.invalidateLiveness('Capture failed. Blink again.');
           return;
         }
 
         this.blob = blob;
-
         this.stopCameraProcessing();
 
-        const previewCtx =
-          previewCanvas.getContext('2d');
-
+        const previewCtx = previewCanvas.getContext('2d');
         if (previewCtx) {
           previewCanvas.width = sourceWidth;
           previewCanvas.height = sourceHeight;
-
-          previewCtx.clearRect(
-            0,
-            0,
-            sourceWidth,
-            sourceHeight
-          );
-
-          previewCtx.drawImage(
-            faceCanvas,
-            0,
-            0,
-            sourceWidth,
-            sourceHeight
-          );
+          previewCtx.clearRect(0, 0, sourceWidth, sourceHeight);
+          previewCtx.drawImage(faceCanvas, 0, 0, sourceWidth, sourceHeight);
         }
 
-        this.livenessMessage =
-          'Image captured successfully.';
-
-        console.log(
-          'Verified human face captured.'
-        );
+        this.captureInProgress = false;
+        this.livenessMessage = 'Verified live face captured securely.';
+        console.log('Verified human face captured immediately after liveness.');
       },
-      'image/png',
-      1
+      'image/jpeg',
+      0.88
     );
   }
 
-  private resetBlinkOnly(): void {
-    if (this.livenessPassed) {
+  private isLivenessFresh(): boolean {
+    return (
+      this.livenessPassed &&
+      this.livenessVerifiedAt > 0 &&
+      performance.now() - this.livenessVerifiedAt <= this.LIVENESS_MAX_AGE_MS
+    );
+  }
+
+  private invalidateLiveness(message: string): void {
+    // Once capture has started, later frames cannot change the submitted image.
+    if (this.captureInProgress) {
       return;
     }
 
+    this.livenessPassed = false;
+    this.livenessVerifiedAt = 0;
     this.eyesWereOpen = false;
     this.eyesWereClosed = false;
+    this.livenessMessage = message;
   }
 
   private resetLiveness(): void {
@@ -524,7 +506,9 @@ export class EditPatientComponent implements OnInit, OnDestroy {
     this.eyesWereClosed = false;
 
     this.boundingBox = null;
+    this.livenessVerifiedAt = 0;
     this.lastVideoTime = -1;
+    this.captureInProgress = false;
   }
 
   private stopCameraProcessing(): void {
@@ -603,7 +587,7 @@ export class EditPatientComponent implements OnInit, OnDestroy {
           formData.append(
             'file',
             this.blob,
-            'captured-face.png'
+            'captured-face.jpg'
           );
 
           this.patientsService

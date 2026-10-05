@@ -39,6 +39,18 @@ export class OpenCameraComponent
   private eyesWereOpen = false;
   private eyesWereClosed = false;
 
+  private faceDetected = false;
+  private boundingBox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null = null;
+
+  private livenessVerifiedAt = 0;
+  private readonly LIVENESS_MAX_AGE_MS = 1200;
+  private recognitionInProgress = false;
+
   constructor(
     private ref: DynamicDialogRef,
     private patientsService: PatientsService
@@ -138,45 +150,105 @@ export class OpenCameraComponent
     const faces = result.faceLandmarks ?? [];
 
     if (faces.length === 0) {
-      this.resetBlink();
-      this.livenessMessage = 'No face detected';
+      this.faceDetected = false;
+      this.boundingBox = null;
+      this.invalidateLiveness('No face detected');
       return;
     }
 
     if (faces.length > 1) {
-      this.resetBlink();
-      this.livenessMessage = 'Keep only one face in the camera.';
+      this.faceDetected = false;
+      this.boundingBox = null;
+      this.invalidateLiveness('Keep only one face in the camera.');
       return;
     }
 
-    const landmarks = faces[0];
+    const box = this.getFaceBoundingBox(
+      faces[0],
+      canvas.width,
+      canvas.height
+    );
+
+    if (!box) {
+      this.faceDetected = false;
+      this.boundingBox = null;
+      this.invalidateLiveness('Move closer and keep your full face centered.');
+      return;
+    }
+
+    this.faceDetected = true;
+    this.boundingBox = box;
+
+    ctx.strokeStyle = this.livenessPassed ? '#16a34a' : '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+    this.processLiveness(result);
+  }
+
+  private getFaceBoundingBox(
+    landmarks: Array<{ x: number; y: number }>,
+    canvasWidth: number,
+    canvasHeight: number
+  ): { x: number; y: number; width: number; height: number } | null {
+    if (!landmarks.length) {
+      return null;
+    }
+
     const xs = landmarks.map(point => point.x);
     const ys = landmarks.map(point => point.y);
 
-    const minX = Math.max(0, Math.min(...xs));
-    const maxX = Math.min(1, Math.max(...xs));
-    const minY = Math.max(0, Math.min(...ys));
-    const maxY = Math.min(1, Math.max(...ys));
+    let minX = Math.min(...xs);
+    let maxX = Math.max(...xs);
+    let minY = Math.min(...ys);
+    let maxY = Math.max(...ys);
 
-    ctx.strokeStyle = this.livenessPassed
-      ? '#16a34a'
-      : '#f59e0b';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(
-      minX * canvas.width,
-      minY * canvas.height,
-      (maxX - minX) * canvas.width,
-      (maxY - minY) * canvas.height
-    );
+    const normalizedWidth = maxX - minX;
+    const normalizedHeight = maxY - minY;
 
-    this.processLiveness(result);
+    if (normalizedWidth < 0.16 || normalizedHeight < 0.20) {
+      return null;
+    }
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    if (
+      centerX < 0.15 || centerX > 0.85 ||
+      centerY < 0.12 || centerY > 0.88
+    ) {
+      return null;
+    }
+
+    const padX = normalizedWidth * 0.22;
+    const padTop = normalizedHeight * 0.35;
+    const padBottom = normalizedHeight * 0.22;
+
+    minX = Math.max(0, minX - padX);
+    maxX = Math.min(1, maxX + padX);
+    minY = Math.max(0, minY - padTop);
+    maxY = Math.min(1, maxY + padBottom);
+
+    return {
+      x: minX * canvasWidth,
+      y: minY * canvasHeight,
+      width: (maxX - minX) * canvasWidth,
+      height: (maxY - minY) * canvasHeight
+    };
   }
 
   private processLiveness(
     result: FaceLandmarkerResult
   ): void {
     if (this.livenessPassed) {
-      this.livenessMessage = 'Liveness passed ✓';
+      if (!this.isLivenessFresh() && !this.recognitionInProgress) {
+        this.invalidateLiveness('Verification expired. Blink again.');
+        return;
+      }
+
+      this.livenessMessage = this.recognitionInProgress
+        ? 'Verified. Recognizing patient...'
+        : 'Liveness passed ✓';
       return;
     }
 
@@ -190,20 +262,12 @@ export class OpenCameraComponent
     const categories = blendshapes[0].categories;
 
     const leftBlink =
-      categories.find(
-        x => x.categoryName === 'eyeBlinkLeft'
-      )?.score ?? 0;
-
+      categories.find(x => x.categoryName === 'eyeBlinkLeft')?.score ?? 0;
     const rightBlink =
-      categories.find(
-        x => x.categoryName === 'eyeBlinkRight'
-      )?.score ?? 0;
+      categories.find(x => x.categoryName === 'eyeBlinkRight')?.score ?? 0;
 
-    const eyesOpen =
-      leftBlink < 0.25 && rightBlink < 0.25;
-
-    const eyesClosed =
-      leftBlink > 0.55 && rightBlink > 0.55;
+    const eyesOpen = leftBlink < 0.25 && rightBlink < 0.25;
+    const eyesClosed = leftBlink > 0.55 && rightBlink > 0.55;
 
     if (!this.eyesWereOpen) {
       if (eyesOpen) {
@@ -221,49 +285,86 @@ export class OpenCameraComponent
 
     if (this.eyesWereClosed && eyesOpen) {
       this.livenessPassed = true;
-      this.livenessMessage = 'Liveness passed ✓';
+      this.livenessVerifiedAt = performance.now();
+      this.livenessMessage = 'Verified. Capturing this same live face now...';
+
+      // Auto-recognize immediately from the verified live stream.
+      queueMicrotask(() => {
+        void this.captureAndDetectFace();
+      });
     }
   }
 
   async captureAndDetectFace(): Promise<void> {
-    if (!this.livenessPassed) {
-      this.livenessMessage = 'Please complete the blink check first.';
+    if (this.recognitionInProgress) {
       return;
     }
+
+    if (
+      !this.livenessPassed ||
+      !this.isLivenessFresh() ||
+      !this.faceDetected ||
+      !this.boundingBox
+    ) {
+      this.invalidateLiveness('Live verification is required. Blink again.');
+      return;
+    }
+
+    this.recognitionInProgress = true;
+    this.livenessMessage = 'Verified. Recognizing patient...';
 
     const video = this.videoElement.nativeElement;
     const captureCanvas = document.createElement('canvas');
     const ctx = captureCanvas.getContext('2d');
 
     if (!ctx) {
+      this.recognitionInProgress = false;
       return;
     }
 
-    captureCanvas.width = video.videoWidth;
-    captureCanvas.height = video.videoHeight;
+    const { x, y, width, height } = this.boundingBox;
+    const sourceX = Math.max(0, Math.floor(x));
+    const sourceY = Math.max(0, Math.floor(y));
+    const sourceWidth = Math.min(video.videoWidth - sourceX, Math.floor(width));
+    const sourceHeight = Math.min(video.videoHeight - sourceY, Math.floor(height));
+
+    if (sourceWidth <= 0 || sourceHeight <= 0) {
+      this.recognitionInProgress = false;
+      this.invalidateLiveness('Unable to capture a valid face. Blink again.');
+      return;
+    }
+
+    captureCanvas.width = sourceWidth;
+    captureCanvas.height = sourceHeight;
 
     ctx.drawImage(
       video,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
       0,
       0,
-      captureCanvas.width,
-      captureCanvas.height
+      sourceWidth,
+      sourceHeight
     );
 
     captureCanvas.toBlob(blob => {
       if (!blob) {
+        this.recognitionInProgress = false;
+        this.invalidateLiveness('Could not capture the face. Blink again.');
         return;
       }
 
       const formData = new FormData();
-      formData.append('file', blob, 'face_image.png');
+      formData.append('file', blob, 'face_image.jpg');
 
-      // Angular -> .NET only.
-      // .NET forwards the image to Python.
       this.patientsService
         .detectAndFind(formData)
         .subscribe({
           next: (response: detectAndFindres) => {
+            this.recognitionInProgress = false;
+
             if (response?.isMatch && response.patientData) {
               const patient: ListPatients = {
                 ...response.patientData,
@@ -274,21 +375,22 @@ export class OpenCameraComponent
                   response.patientData.faceImgUrl
               };
 
+              this.cleanupCamera();
               this.ref.close(patient);
               return;
             }
 
+            this.invalidateLiveness('No match found. Blink again to retry.');
             alert('No matching patient found.');
           },
           error: error => {
-            console.error(
-              'Error during face detection:',
-              error
-            );
+            this.recognitionInProgress = false;
+            console.error('Error during face detection:', error);
+            this.invalidateLiveness('Recognition failed. Blink again to retry.');
             alert('Face recognition request failed.');
           }
         });
-    }, 'image/png');
+    }, 'image/jpeg', 0.88);
   }
 
   stopCameraAndRedirect(): void {
@@ -300,13 +402,26 @@ export class OpenCameraComponent
     this.cleanupCamera();
   }
 
-  private resetBlink(): void {
-    if (this.livenessPassed) {
+  private isLivenessFresh(): boolean {
+    return (
+      this.livenessPassed &&
+      this.livenessVerifiedAt > 0 &&
+      performance.now() - this.livenessVerifiedAt <= this.LIVENESS_MAX_AGE_MS
+    );
+  }
+
+  private invalidateLiveness(message: string): void {
+    // If a verified frame has already been captured and sent,
+    // later changes in the camera cannot alter that request.
+    if (this.recognitionInProgress) {
       return;
     }
 
+    this.livenessPassed = false;
+    this.livenessVerifiedAt = 0;
     this.eyesWereOpen = false;
     this.eyesWereClosed = false;
+    this.livenessMessage = message;
   }
 
   private cleanupCamera(): void {

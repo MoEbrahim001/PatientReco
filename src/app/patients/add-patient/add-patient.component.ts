@@ -72,6 +72,10 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
   private eyesWereOpen = false;
   private eyesWereClosed = false;
 
+  private livenessVerifiedAt = 0;
+  private readonly LIVENESS_MAX_AGE_MS = 1200;
+  private captureInProgress = false;
+
   constructor(
     private patientsService: PatientsService,
     private ref: DynamicDialogRef,
@@ -190,20 +194,19 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
 
     const faces = result.faceLandmarks ?? [];
 
-    // Require exactly one real face.
     if (faces.length === 0) {
       this.faceDetected = false;
       this.boundingBox = null;
-      this.resetBlinkOnly();
-      this.livenessMessage = 'No human face detected.';
+      this.invalidateLiveness('No human face detected.');
       return;
     }
 
     if (faces.length > 1) {
       this.faceDetected = false;
       this.boundingBox = null;
-      this.resetBlinkOnly();
-      this.livenessMessage = 'More than one face detected. Keep only one person in view.';
+      this.invalidateLiveness(
+        'More than one face detected. Keep only one person in view.'
+      );
       return;
     }
 
@@ -218,8 +221,9 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
     if (!box) {
       this.faceDetected = false;
       this.boundingBox = null;
-      this.resetBlinkOnly();
-      this.livenessMessage = 'Move closer and keep your full face visible.';
+      this.invalidateLiveness(
+        'Move closer and keep your full face visible.'
+      );
       return;
     }
 
@@ -298,7 +302,14 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
 
   private processBlink(result: FaceLandmarkerResult): void {
     if (this.livenessPassed) {
-      this.livenessMessage = 'Live human verified. Ready to capture.';
+      if (!this.isLivenessFresh() && !this.captureInProgress) {
+        this.invalidateLiveness('Verification expired. Blink again.');
+        return;
+      }
+
+      this.livenessMessage = this.captureInProgress
+        ? 'Verified. Capturing this same live face...'
+        : 'Live human verified.';
       return;
     }
 
@@ -317,13 +328,8 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
     const rightBlink =
       categories.find(x => x.categoryName === 'eyeBlinkRight')?.score ?? 0;
 
-    const eyesOpen =
-      leftBlink < 0.25 &&
-      rightBlink < 0.25;
-
-    const eyesClosed =
-      leftBlink > 0.55 &&
-      rightBlink > 0.55;
+    const eyesOpen = leftBlink < 0.25 && rightBlink < 0.25;
+    const eyesClosed = leftBlink > 0.55 && rightBlink > 0.55;
 
     if (!this.eyesWereOpen) {
       if (eyesOpen) {
@@ -332,48 +338,51 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
       } else {
         this.livenessMessage = 'Open your eyes and look at the camera.';
       }
-
       return;
     }
 
-    if (
-      this.eyesWereOpen &&
-      !this.eyesWereClosed &&
-      eyesClosed
-    ) {
+    if (this.eyesWereOpen && !this.eyesWereClosed && eyesClosed) {
       this.eyesWereClosed = true;
       this.livenessMessage = 'Good. Open your eyes.';
       return;
     }
 
-    if (
-      this.eyesWereOpen &&
-      this.eyesWereClosed &&
-      eyesOpen
-    ) {
+    if (this.eyesWereOpen && this.eyesWereClosed && eyesOpen) {
       this.livenessPassed = true;
-      this.livenessMessage = 'Live human verified. Ready to capture.';
+      this.livenessVerifiedAt = performance.now();
+      this.livenessMessage = 'Live human verified. Capturing immediately...';
       console.log('HUMAN LIVENESS PASSED');
+
+      // Capture immediately after liveness so the verified person
+      // cannot be swapped with a photo or another face before capture.
+      queueMicrotask(() => this.captureImage());
     }
   }
 
   captureImage(): void {
-    if (!this.livenessPassed || !this.faceDetected || !this.boundingBox) {
-      this.errorDisplay = true;
-      this.errorMessage =
-        'A live human face must be detected and verified before capturing.';
+    if (this.captureInProgress) {
       return;
     }
 
+    if (
+      !this.livenessPassed ||
+      !this.isLivenessFresh() ||
+      !this.faceDetected ||
+      !this.boundingBox
+    ) {
+      this.errorDisplay = true;
+      this.errorMessage =
+        'A fresh live human verification is required before capturing. Blink again.';
+      this.invalidateLiveness('Verification expired. Blink again.');
+      return;
+    }
+
+    this.captureInProgress = true;
+    this.livenessMessage = 'Verified. Capturing this same live face...';
+
     const video = this.videoElement.nativeElement;
     const previewCanvas = this.canvasElement.nativeElement;
-
-    const {
-      x,
-      y,
-      width,
-      height
-    } = this.boundingBox;
+    const { x, y, width, height } = this.boundingBox;
 
     const sourceX = Math.max(0, Math.floor(x));
     const sourceY = Math.max(0, Math.floor(y));
@@ -387,8 +396,10 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
     );
 
     if (sourceWidth <= 0 || sourceHeight <= 0) {
+      this.captureInProgress = false;
       this.errorDisplay = true;
       this.errorMessage = 'Unable to capture a valid face image.';
+      this.invalidateLiveness('Unable to capture the face. Blink again.');
       return;
     }
 
@@ -397,8 +408,8 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
     faceCanvas.height = sourceHeight;
 
     const faceCtx = faceCanvas.getContext('2d');
-
     if (!faceCtx) {
+      this.captureInProgress = false;
       return;
     }
 
@@ -417,53 +428,52 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
     faceCanvas.toBlob(
       blob => {
         if (!blob) {
+          this.captureInProgress = false;
           this.errorDisplay = true;
           this.errorMessage = 'Could not create the captured image.';
+          this.invalidateLiveness('Capture failed. Blink again.');
           return;
         }
 
         this.blob = blob;
-
         this.stopCameraProcessing();
 
-        // Show the final cropped face in the visible canvas.
         const previewCtx = previewCanvas.getContext('2d');
-
         if (previewCtx) {
           previewCanvas.width = sourceWidth;
           previewCanvas.height = sourceHeight;
-
-          previewCtx.clearRect(
-            0,
-            0,
-            sourceWidth,
-            sourceHeight
-          );
-
-          previewCtx.drawImage(
-            faceCanvas,
-            0,
-            0,
-            sourceWidth,
-            sourceHeight
-          );
+          previewCtx.clearRect(0, 0, sourceWidth, sourceHeight);
+          previewCtx.drawImage(faceCanvas, 0, 0, sourceWidth, sourceHeight);
         }
 
-        this.livenessMessage = 'Image captured successfully.';
-        console.log('Verified human face captured.');
+        this.captureInProgress = false;
+        this.livenessMessage = 'Verified live face captured securely.';
+        console.log('Verified human face captured immediately after liveness.');
       },
-      'image/png',
-      1
+      'image/jpeg',
+      0.88
     );
   }
 
-  private resetBlinkOnly(): void {
-    if (this.livenessPassed) {
+  private isLivenessFresh(): boolean {
+    return (
+      this.livenessPassed &&
+      this.livenessVerifiedAt > 0 &&
+      performance.now() - this.livenessVerifiedAt <= this.LIVENESS_MAX_AGE_MS
+    );
+  }
+
+  private invalidateLiveness(message: string): void {
+    // Once capture has started, later frames cannot change the submitted image.
+    if (this.captureInProgress) {
       return;
     }
 
+    this.livenessPassed = false;
+    this.livenessVerifiedAt = 0;
     this.eyesWereOpen = false;
     this.eyesWereClosed = false;
+    this.livenessMessage = message;
   }
 
   private resetLiveness(): void {
@@ -474,7 +484,9 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
     this.eyesWereClosed = false;
 
     this.boundingBox = null;
+    this.livenessVerifiedAt = 0;
     this.lastVideoTime = -1;
+    this.captureInProgress = false;
   }
 
   private stopCameraProcessing(): void {
@@ -544,7 +556,7 @@ export class AddPatientComponent implements AfterViewInit, OnDestroy {
           formData.append(
             'file',
             this.blob,
-            'captured-face.png'
+            'captured-face.jpg'
           );
 
           this.patientsService
