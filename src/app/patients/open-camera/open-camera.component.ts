@@ -1,7 +1,9 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
+  NgZone,
   OnDestroy,
   ViewChild
 } from '@angular/core';
@@ -51,10 +53,12 @@ export class OpenCameraComponent
   private readonly LIVENESS_MAX_AGE_MS = 1200;
   private recognitionInProgress = false;
 
-  constructor(
-    private ref: DynamicDialogRef,
-    private patientsService: PatientsService
-  ) {}
+constructor(
+  private ref: DynamicDialogRef,
+  private patientsService: PatientsService,
+  private ngZone: NgZone,
+  private cdr: ChangeDetectorRef
+) {}
 
   async ngAfterViewInit(): Promise<void> {
     try {
@@ -121,8 +125,10 @@ export class OpenCameraComponent
           performance.now()
         );
 
-        this.handleFaceResult(result, canvas);
-      }
+this.ngZone.run(() => {
+  this.handleFaceResult(result, canvas);
+  this.cdr.detectChanges();
+});      }
 
       if (this.videoStream) {
         this.animationFrameId = requestAnimationFrame(process);
@@ -363,26 +369,34 @@ export class OpenCameraComponent
         .detectAndFind(formData)
         .subscribe({
           next: (response: detectAndFindres) => {
-            this.recognitionInProgress = false;
+  this.ngZone.run(() => {
+    this.recognitionInProgress = false;
 
-            if (response?.isMatch && response.patientData) {
-              const patient: ListPatients = {
-                ...response.patientData,
-                name:
-                  response.patientName ??
-                  response.patientData.name,
-                faceImgUrl:
-                  response.patientData.faceImgUrl
-              };
+    if (response?.isMatch && response.patientData) {
+      const patient: ListPatients = {
+        ...response.patientData,
+        name:
+          response.patientName ??
+          response.patientData.name,
+        faceImgUrl:
+          response.patientData.faceImgUrl
+      };
 
-              this.cleanupCamera();
-              this.ref.close(patient);
-              return;
-            }
+      this.cleanupCamera();
+      this.ref.close(patient);
 
-            this.invalidateLiveness('No match found. Blink again to retry.');
-            alert('No matching patient found.');
-          },
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.invalidateLiveness(
+      'No match found. Blink again to retry.'
+    );
+
+    this.cdr.detectChanges();
+    alert('No matching patient found.');
+  });
+},
           error: error => {
             this.recognitionInProgress = false;
             console.error('Error during face detection:', error);
