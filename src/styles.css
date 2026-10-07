@@ -30,3 +30,287 @@ body {
   color: var(--text-main);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* =====================================================
+   PATIENT DELETE CONFIRMATION
+   ===================================================== */
+
+.patient-confirm-dialog.p-dialog {
+  width: min(470px, calc(100vw - 30px)) !important;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #eadfce !important;
+
+  border-radius:
+    24px !important;
+
+  background:
+    #fffdf8 !important;
+
+  box-shadow:
+    0
+    28px
+    80px
+    rgba(19, 56, 47, 0.20) !important;
+}
+
+
+/* HEADER */
+
+.patient-confirm-dialog .p-dialog-header {
+  padding:
+    22px
+    24px
+    17px !important;
+
+  border-bottom:
+    1px solid
+    #eee4d6 !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffdf8,
+      #fbf5ea
+    ) !important;
+}
+
+
+.patient-confirm-dialog .p-dialog-title {
+  color:
+    #123d33 !important;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif !important;
+
+  font-size:
+    21px !important;
+
+  font-weight:
+    700 !important;
+}
+
+
+/* CLOSE */
+
+.patient-confirm-dialog .p-dialog-header-close {
+  width: 38px !important;
+  height: 38px !important;
+
+  border-radius:
+    50% !important;
+
+  color:
+    #63736e !important;
+
+  transition:
+    .2s ease !important;
+}
+
+
+.patient-confirm-dialog .p-dialog-header-close:hover {
+  background:
+    #f4ede2 !important;
+
+  color:
+    #063f32 !important;
+}
+
+
+/* CONTENT */
+
+.patient-confirm-dialog .p-dialog-content {
+  display: flex !important;
+
+  align-items: center !important;
+
+  gap: 16px !important;
+
+  padding:
+    25px
+    24px !important;
+
+  background:
+    #fffdf8 !important;
+
+  color:
+    #53635e !important;
+
+  font-size:
+    14px !important;
+
+  line-height:
+    1.55 !important;
+}
+
+
+/* WARNING ICON */
+
+.patient-confirm-dialog .p-confirm-dialog-icon {
+  width: 52px !important;
+  height: 52px !important;
+
+  display: grid !important;
+
+  place-items: center !important;
+
+  flex:
+    0
+    0
+    52px !important;
+
+  margin: 0 !important;
+
+  border:
+    1px solid
+    #f3c9c0 !important;
+
+  border-radius:
+    50% !important;
+
+  background:
+    #fff0ec !important;
+
+  color:
+    #d95345 !important;
+
+  font-size:
+    22px !important;
+}
+
+
+/* MESSAGE */
+
+.patient-confirm-dialog .p-confirm-dialog-message {
+  margin: 0 !important;
+
+  color:
+    #53635e !important;
+
+  font-size:
+    14px !important;
+}
+
+
+/* FOOTER */
+
+.patient-confirm-dialog .p-dialog-footer {
+  display: flex !important;
+
+  justify-content: flex-end !important;
+
+  gap: 10px !important;
+
+  padding:
+    0
+    24px
+    23px !important;
+
+  border-top: 0 !important;
+
+  background:
+    #fffdf8 !important;
+}
+
+
+/* CANCEL */
+
+.patient-confirm-dialog .p-confirm-dialog-reject {
+  min-width:
+    110px !important;
+
+  height:
+    44px !important;
+
+  border:
+    1px solid
+    #d9d2c7 !important;
+
+  border-radius:
+    999px !important;
+
+  background:
+    #faf7f1 !important;
+
+  color:
+    #55655f !important;
+
+  box-shadow:
+    none !important;
+
+  font-weight:
+    700 !important;
+}
+
+
+.patient-confirm-dialog .p-confirm-dialog-reject:hover {
+  border-color:
+    #c8bba8 !important;
+
+  background:
+    #f2ede5 !important;
+}
+
+
+/* DELETE */
+
+.patient-confirm-dialog .p-confirm-dialog-accept {
+  min-width:
+    110px !important;
+
+  height:
+    44px !important;
+
+  border:
+    0 !important;
+
+  border-radius:
+    999px !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #e26a5d,
+      #c94b40
+    ) !important;
+
+  color:
+    white !important;
+
+  box-shadow:
+    0
+    10px
+    22px
+    rgba(201, 75, 64, 0.22) !important;
+
+  font-weight:
+    700 !important;
+
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease !important;
+}
+
+
+.patient-confirm-dialog .p-confirm-dialog-accept:hover {
+  transform:
+    translateY(-2px) !important;
+
+  box-shadow:
+    0
+    14px
+    28px
+    rgba(201, 75, 64, 0.28) !important;
+}
+
+
+/* BUTTON ICONS */
+
+.patient-confirm-dialog .p-button-icon {
+  font-size:
+    12px !important;
+}
