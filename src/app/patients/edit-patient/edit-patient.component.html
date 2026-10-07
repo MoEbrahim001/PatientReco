@@ -5,63 +5,103 @@
 
   <div class="page-shell">
 
+    <!-- ========================= -->
+    <!-- HERO -->
+    <!-- ========================= -->
     <header class="patient-hero">
 
       <div class="hero-copy">
-        <span class="eyebrow">PATIENT MANAGEMENT</span>
 
-        <h2>Edit <em>Patient</em></h2>
+        <span class="eyebrow">
+          PATIENT MANAGEMENT
+        </span>
+
+        <h2>
+          Edit <em>Patient</em>
+        </h2>
 
         <p>
           Update patient information and optionally refresh
           the biometric face profile.
         </p>
+
       </div>
 
+
       <div class="hero-note">
+
         <div class="hero-note-icon">
           <i class="pi pi-user-edit"></i>
         </div>
 
         <div>
-          <strong>Profile Update</strong>
-          <span>Existing patient record</span>
+          <strong>
+            Profile Update
+          </strong>
+
+          <span>
+            Existing patient record
+          </span>
         </div>
+
       </div>
 
     </header>
 
+
+    <!-- ========================= -->
+    <!-- JOURNEY -->
+    <!-- ========================= -->
     <div class="journey">
 
       <div class="journey-item active">
-        <span>1</span>
+
+        <span>
+          1
+        </span>
 
         <div>
-          <strong>Patient Details</strong>
-          <small>Review information</small>
+          <strong>
+            Patient Details
+          </strong>
+
+          <small>
+            Review information
+          </small>
         </div>
+
       </div>
+
 
       <div class="journey-line"></div>
 
+
       <div
         class="journey-item"
-        [class.complete]="livenessPassed">
+        [class.complete]="livenessPassed || !!blob">
 
         <span>
           <i class="pi pi-camera"></i>
         </span>
 
         <div>
-          <strong>Optional Face Update</strong>
-          <small>Re-enroll if required</small>
+          <strong>
+            Optional Face Update
+          </strong>
+
+          <small>
+            Re-enroll if required
+          </small>
         </div>
+
       </div>
+
 
       <div
         class="journey-line"
         [class.complete]="!!blob">
       </div>
+
 
       <div
         class="journey-item"
@@ -72,19 +112,32 @@
         </span>
 
         <div>
-          <strong>Save Changes</strong>
-          <small>Update patient record</small>
+          <strong>
+            Save Changes
+          </strong>
+
+          <small>
+            Update patient record
+          </small>
         </div>
+
       </div>
 
     </div>
 
+
+    <!-- ========================= -->
+    <!-- FORM -->
+    <!-- ========================= -->
     <form
       (ngSubmit)="submitForm()"
       #patientForm="ngForm"
       class="patient-layout">
 
-      <!-- INFO -->
+
+      <!-- ========================= -->
+      <!-- PATIENT INFORMATION -->
+      <!-- ========================= -->
       <section class="premium-card personal-card">
 
         <div class="card-heading">
@@ -93,25 +146,39 @@
             <i class="pi pi-id-card"></i>
           </div>
 
-          <div>
-            <span class="section-kicker">PATIENT RECORD</span>
-            <h3>Patient Information</h3>
+          <div class="heading-copy">
+
+            <span class="section-kicker">
+              PATIENT RECORD
+            </span>
+
+            <h3>
+              Patient Information
+            </h3>
+
             <p>
-              Keep the patient's core profile accurate and up to date.
+              Keep the patient's core profile accurate
+              and up to date.
             </p>
+
           </div>
 
         </div>
 
+
         <div class="form-grid">
 
+
+          <!-- NAME -->
           <div class="field">
+
             <label>
               Full Name
               <b>*</b>
             </label>
 
             <div class="input-shell">
+
               <i class="pi pi-user"></i>
 
               <input
@@ -121,16 +188,22 @@
                 name="name"
                 placeholder="Patient name"
                 required />
+
             </div>
+
           </div>
 
+
+          <!-- NATIONAL NO -->
           <div class="field">
+
             <label>
               National Number
               <b>*</b>
             </label>
 
             <div class="input-shell">
+
               <i class="pi pi-id-card"></i>
 
               <input
@@ -140,16 +213,22 @@
                 name="nationalno"
                 placeholder="National number"
                 required />
+
             </div>
+
           </div>
 
+
+          <!-- MOBILE -->
           <div class="field">
+
             <label>
               Mobile Number
               <b>*</b>
             </label>
 
             <div class="input-shell">
+
               <i class="pi pi-phone"></i>
 
               <input
@@ -159,13 +238,21 @@
                 name="mobileno"
                 placeholder="Mobile number"
                 required />
+
             </div>
+
           </div>
 
+
+          <!-- DOB -->
           <div class="field">
-            <label>Date of Birth</label>
+
+            <label>
+              Date of Birth
+            </label>
 
             <div class="calendar-shell">
+
               <i class="pi pi-calendar"></i>
 
               <p-calendar
@@ -176,71 +263,100 @@
                 (onSelect)="onDateChange($event)"
                 [style]="{ width: '100%' }">
               </p-calendar>
+
             </div>
+
           </div>
 
         </div>
 
+
         <div class="profile-tip">
+
           <i class="pi pi-info-circle"></i>
 
           <span>
             Saving without opening the camera keeps the patient's
-            current biometric profile.
+            current biometric profile unchanged.
           </span>
+
         </div>
 
       </section>
 
-      <!-- FACE -->
+
+      <!-- ========================= -->
+      <!-- FACE PROFILE -->
+      <!-- ========================= -->
       <section class="premium-card biometric-card">
 
         <div class="card-heading">
 
           <div class="heading-icon face-icon">
-            <i class="pi pi-camera"></i>
+            <i class="pi pi-scan"></i>
           </div>
 
-          <div>
-            <span class="section-kicker">BIOMETRIC PROFILE</span>
-            <h3>Update Face Profile</h3>
+          <div class="heading-copy">
+
+            <span class="section-kicker">
+              BIOMETRIC PROFILE
+            </span>
+
+            <h3>
+              Update Face Profile
+            </h3>
+
             <p>
               Capture a new verified live face only when
               re-enrollment is required.
             </p>
+
           </div>
 
         </div>
 
+
+        <!-- VERIFICATION STATUS -->
         <div
           class="verification-bar"
           [class.verified]="livenessPassed || !!blob">
 
           <div class="verify-icon">
-            <i class="pi"
-               [class.pi-shield]="!livenessPassed && !blob"
-               [class.pi-check-circle]="livenessPassed || !!blob">
+
+            <i
+              class="pi"
+              [class.pi-shield]="!livenessPassed && !blob"
+              [class.pi-check-circle]="livenessPassed || !!blob">
             </i>
+
           </div>
 
-          <div>
+
+          <div class="verification-copy">
+
             <strong>
               {{
                 blob
-                  ? 'New face captured'
+                  ? 'New verified face captured'
                   : livenessPassed
                     ? 'Human verified'
                     : 'Current profile retained'
               }}
             </strong>
 
-            <span>{{ livenessMessage }}</span>
+            <span>
+              {{ livenessMessage }}
+            </span>
+
           </div>
+
 
           <div class="verification-dot"></div>
 
         </div>
 
+
+        <!-- CAMERA PREVIEW -->
         <div class="capture-preview">
 
           <div class="canvas-shell">
@@ -250,23 +366,32 @@
               class="face-canvas">
             </canvas>
 
+
             <div class="canvas-overlay">
+
               <span></span>
               <span></span>
               <span></span>
               <span></span>
+
             </div>
+
 
             <div
               class="preview-label"
               [class.ready]="!!blob">
 
-              <i class="pi"
-                 [class.pi-camera]="!blob"
-                 [class.pi-check]="!!blob">
+              <i
+                class="pi"
+                [class.pi-camera]="!blob"
+                [class.pi-check]="!!blob">
               </i>
 
-              {{ blob ? 'New verified capture' : 'Face profile preview' }}
+              {{
+                blob
+                  ? 'New verified capture'
+                  : 'Face profile preview'
+              }}
 
             </div>
 
@@ -274,37 +399,64 @@
 
         </div>
 
+
+        <!-- CAMERA HELP -->
         <div class="capture-help">
 
           <div>
+
             <i class="pi pi-sun"></i>
 
             <span>
-              <strong>Good Lighting</strong>
-              <small>Keep face clearly visible</small>
+              <strong>
+                Good Lighting
+              </strong>
+
+              <small>
+                Keep face clearly visible
+              </small>
             </span>
+
           </div>
 
+
           <div>
+
             <i class="pi pi-user"></i>
 
             <span>
-              <strong>One Person</strong>
-              <small>No additional faces</small>
+              <strong>
+                One Person
+              </strong>
+
+              <small>
+                No additional faces
+              </small>
             </span>
+
           </div>
 
+
           <div>
+
             <i class="pi pi-eye"></i>
 
             <span>
-              <strong>Live Verification</strong>
-              <small>Blink naturally</small>
+              <strong>
+                Live Verification
+              </strong>
+
+              <small>
+                Blink naturally
+              </small>
             </span>
+
           </div>
 
         </div>
 
+
+        <!-- OPEN CAMERA -->
         <button
           pButton
           type="button"
@@ -316,16 +468,23 @@
 
       </section>
 
+
+      <!-- ========================= -->
+      <!-- FOOTER -->
+      <!-- ========================= -->
       <footer class="form-footer">
 
         <div class="footer-note">
+
           <i class="pi pi-shield"></i>
 
           <span>
             Your current face image remains unchanged unless
             a new verified capture is completed.
           </span>
+
         </div>
+
 
         <button
           pButton
@@ -337,10 +496,13 @@
 
       </footer>
 
+
+      <!-- CAMERA SOURCE -->
       <video
         #videoElement
         width="640"
         height="480"
+        playsinline
         style="display:none;">
       </video>
 
@@ -350,40 +512,68 @@
 
 </div>
 
+
+<!-- ========================= -->
+<!-- SUCCESS DIALOG -->
+<!-- ========================= -->
 <p-dialog
   appendTo="body"
   [modal]="true"
   [(visible)]="showSuccessfullyMessage"
-  [style]="{ width: '400px' }">
+  [style]="{
+    width: 'min(400px, calc(100vw - 30px))'
+  }">
 
   <ng-template pTemplate="header">
+
     <div class="dialog-title success-title">
+
       <i class="pi pi-check-circle"></i>
+
       {{ SuccessfullyHeader }}
+
     </div>
+
   </ng-template>
 
+
   <div class="dialog-content success-content">
+
     {{ SuccessfullyMessage }}
+
   </div>
 
 </p-dialog>
 
+
+<!-- ========================= -->
+<!-- ERROR DIALOG -->
+<!-- ========================= -->
 <p-dialog
   appendTo="body"
   [modal]="true"
   [(visible)]="errorDisplay"
-  [style]="{ width: '400px' }">
+  [style]="{
+    width: 'min(400px, calc(100vw - 30px))'
+  }">
 
   <ng-template pTemplate="header">
+
     <div class="dialog-title error-title">
+
       <i class="pi pi-exclamation-circle"></i>
+
       Error
+
     </div>
+
   </ng-template>
 
+
   <div class="dialog-content error-content">
+
     {{ errorMessage }}
+
   </div>
 
 </p-dialog>
