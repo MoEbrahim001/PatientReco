@@ -3689,3 +3689,76 @@
       .01ms !important;
   }
 }
+/* =========================================
+   FACE RECOGNITION DIALOG
+   ========================================= */
+
+:host ::ng-deep .face-recognition-dialog {
+  width: min(1180px, 96vw) !important;
+
+  max-width: 1180px !important;
+
+  max-height: 92vh !important;
+
+  margin-top: -3vh;
+
+  border-radius: 24px !important;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 32px 90px rgba(5, 46, 38, 0.28) !important;
+}
+
+
+:host ::ng-deep .face-recognition-dialog .p-dialog-header {
+  padding:
+    20px
+    26px !important;
+
+  border-bottom:
+    1px solid #eee5d8;
+
+  background:
+    #fffdf9;
+}
+
+
+:host ::ng-deep .face-recognition-dialog .p-dialog-title {
+  color: #153d33;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 21px;
+
+  font-weight: 700;
+}
+
+
+:host ::ng-deep .face-recognition-dialog .p-dialog-content {
+  padding: 0 !important;
+
+  max-height: 82vh !important;
+
+  overflow-y: auto;
+}
+
+
+:host ::ng-deep .face-recognition-dialog .p-dialog-header-close {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  color: #52645e;
+}
+
+
+:host ::ng-deep .face-recognition-dialog .p-dialog-header-close:hover {
+  background: #f3eee5;
+
+  color: #063f32;
+}

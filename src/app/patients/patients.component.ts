@@ -184,44 +184,41 @@ export class PatientsComponent
   }
 
 
-  openCamera(): void {
+ openCamera(): void {
 
-    const refDialog =
-      this.dialogService.open(
-        OpenCameraComponent,
-        {
-          header:
-            'Face Recognition',
+  const refDialog =
+    this.dialogService.open(
+      OpenCameraComponent,
+      {
+        header: 'Face Recognition',
 
-          width:
-            'min(820px, 96vw)',
+        width: 'min(1180px, 96vw)',
 
-          contentStyle: {
-            padding: '0'
-          }
-        }
-      );
+        styleClass: 'face-recognition-dialog',
 
+        contentStyle: {
+          padding: '0',
+          overflow: 'auto',
+          maxHeight: '82vh'
+        },
 
-    refDialog
-      .onClose
-      .subscribe(
-        patient => {
+        closable: true,
+        modal: true
+      }
+    );
 
-          if (!patient) {
-            return;
-          }
+  refDialog
+    .onClose
+    .subscribe(patient => {
 
-          this.patientResult.results =
-            [patient];
+      if (!patient) {
+        return;
+      }
 
-          this.patientResult.totalResults =
-            1;
-        }
-      );
-  }
-
-
+      this.patientResult.results = [patient];
+      this.patientResult.totalResults = 1;
+    });
+}
   onEdit(
     patient: ListPatients
   ): void {
