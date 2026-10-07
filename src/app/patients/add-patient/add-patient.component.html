@@ -1,276 +1,350 @@
 <div class="patient-page">
-  <div class="page-glow glow-left"></div>
-  <div class="page-glow glow-right"></div>
+
+  <div class="leaf-shape leaf-one"></div>
+  <div class="leaf-shape leaf-two"></div>
 
   <div class="page-shell">
-    <div class="page-header">
-      <div class="page-heading">
-        <span class="eyebrow">Patient management</span>
-        <h2>Add Patient</h2>
-        <p>Create a patient profile and enroll a verified live face in one guided flow.</p>
+
+    <header class="patient-hero">
+
+      <div class="hero-copy">
+        <span class="eyebrow">PATIENT MANAGEMENT</span>
+
+        <h2>Add New <em>Patient</em></h2>
+
+        <p>
+          Create a patient profile and enroll a verified live face
+          in one secure guided flow.
+        </p>
       </div>
 
-      <div class="header-badge">
-        <div class="header-icon">
-          <i class="pi pi-user-plus"></i>
+      <div class="hero-note">
+        <div class="hero-note-icon">
+          <i class="pi pi-shield"></i>
         </div>
+
         <div>
-          <strong>New profile</strong>
-          <span>Secure enrollment</span>
+          <strong>Secure Enrollment</strong>
+          <span>Live biometric verification enabled</span>
         </div>
       </div>
-    </div>
 
-    <div class="journey-strip">
-      <div class="journey-step active">
+    </header>
+
+    <div class="journey">
+
+      <div class="journey-item active">
         <span>1</span>
         <div>
-          <strong>Patient details</strong>
-          <small>Basic information</small>
+          <strong>Patient Details</strong>
+          <small>Enter basic information</small>
         </div>
       </div>
 
       <div class="journey-line"></div>
 
-      <div class="journey-step" [class.complete]="livenessPassed">
-        <span><i class="pi pi-camera"></i></span>
+      <div
+        class="journey-item"
+        [class.complete]="livenessPassed">
+
+        <span>
+          <i class="pi pi-camera"></i>
+        </span>
+
         <div>
-          <strong>Face verification</strong>
+          <strong>Face Verification</strong>
           <small>Live biometric check</small>
         </div>
       </div>
 
-      <div class="journey-line" [class.complete]="livenessPassed"></div>
+      <div
+        class="journey-line"
+        [class.complete]="livenessPassed">
+      </div>
 
-      <div class="journey-step" [class.complete]="!!blob">
-        <span><i class="pi pi-check"></i></span>
+      <div
+        class="journey-item"
+        [class.complete]="!!blob">
+
+        <span>
+          <i class="pi pi-check"></i>
+        </span>
+
         <div>
-          <strong>Ready to save</strong>
-          <small>Review and create</small>
+          <strong>Review & Save</strong>
+          <small>Confirm and create</small>
         </div>
       </div>
+
     </div>
 
-    <div class="patient-card">
-      <form
-        (ngSubmit)="submitForm()"
-        #patientForm="ngForm"
-        class="patient-form">
+    <form
+      (ngSubmit)="submitForm()"
+      #patientForm="ngForm"
+      class="patient-layout">
 
-        <section class="form-section personal-section">
-          <div class="section-header">
-            <div class="section-icon">
-              <i class="pi pi-id-card"></i>
-            </div>
+      <!-- PERSONAL -->
+      <section class="premium-card personal-card">
 
-            <div class="section-copy">
-              <span class="section-kicker">Step 01</span>
-              <h4>Personal Information</h4>
-              <p>Enter the patient's primary details exactly as they should appear in the system.</p>
-            </div>
+        <div class="card-heading">
+
+          <div class="heading-icon">
+            <i class="pi pi-user"></i>
           </div>
 
-          <div class="form-grid">
-            <div class="form-field">
-              <label for="name">Full name <span class="required">*</span></label>
-              <div class="input-shell">
-                <i class="pi pi-user"></i>
-                <input
-                  id="name"
-                  type="text"
-                  pInputText
-                  [(ngModel)]="patientData.name"
-                  name="name"
-                  placeholder="e.g. Mohamed Ebrahim"
-                  required />
-              </div>
-              <small>Use the patient's legal or preferred full name.</small>
-            </div>
-
-            <div class="form-field">
-              <label for="dob">Date of birth <span class="required">*</span></label>
-              <div class="input-shell">
-                <i class="pi pi-calendar"></i>
-                <input
-                  id="dob"
-                  type="date"
-                  [(ngModel)]="dob"
-                  (change)="onDateChange($event)"
-                  name="dob"
-                  required />
-              </div>
-              <small>Used for patient verification and identification.</small>
-            </div>
-
-            <div class="form-field">
-              <label for="mobileNo">Mobile number <span class="required">*</span></label>
-              <div class="input-shell">
-                <i class="pi pi-phone"></i>
-                <input
-                  id="mobileNo"
-                  type="text"
-                  pInputText
-                  [(ngModel)]="patientData.mobileno"
-                  name="mobileNo"
-                  placeholder="Enter mobile number"
-                  required />
-              </div>
-              <small>Numbers only. Used for quick patient lookup.</small>
-            </div>
-
-            <div class="form-field">
-              <label for="nationalNo">National number <span class="required">*</span></label>
-              <div class="input-shell">
-                <i class="pi pi-credit-card"></i>
-                <input
-                  id="nationalNo"
-                  type="text"
-                  pInputText
-                  [(ngModel)]="patientData.nationalno"
-                  name="nationalNo"
-                  placeholder="Enter national number"
-                  required />
-              </div>
-              <small>Must be unique for each registered patient.</small>
-            </div>
-          </div>
-        </section>
-
-        <section class="form-section face-section">
-          <div class="section-header">
-            <div class="section-icon biometric-icon">
-              <i class="pi pi-scan"></i>
-            </div>
-
-            <div class="section-copy">
-              <span class="section-kicker">Step 02</span>
-              <h4>Live Face Enrollment</h4>
-              <p>Verify a real person with a blink. The same live face is captured immediately after verification.</p>
-            </div>
-
-            <div class="verification-chip" [class.verified-chip]="livenessPassed">
-              <i class="pi" [class.pi-shield]="!livenessPassed" [class.pi-verified]="livenessPassed"></i>
-              {{ livenessPassed ? 'Verified' : 'Not verified' }}
-            </div>
+          <div>
+            <span class="section-kicker">PROFILE DETAILS</span>
+            <h3>Personal Information</h3>
+            <p>
+              Enter the patient's details exactly as they should
+              appear in the system.
+            </p>
           </div>
 
-          <div
-            class="human-status"
-            [class.human-status-verified]="livenessPassed">
-
-            <div
-              class="human-status-icon"
-              [class.verified-icon]="livenessPassed">
-              <i
-                class="pi"
-                [class.pi-eye]="!livenessPassed"
-                [class.pi-check-circle]="livenessPassed">
-              </i>
-            </div>
-
-            <div class="human-status-copy">
-              <strong>{{ livenessPassed ? 'Human verified' : 'Human verification required' }}</strong>
-              <span>{{ livenessMessage }}</span>
-            </div>
-
-            <div class="status-meter">
-              <span [class.active]="faceDetected"></span>
-              <span [class.active]="livenessPassed"></span>
-              <span [class.active]="!!blob"></span>
-            </div>
-          </div>
-
-          <div class="camera-layout">
-            <div class="camera-actions">
-              <div class="camera-placeholder">
-                <div class="camera-orb">
-                  <i class="pi pi-camera"></i>
-                  <span class="orb-ring ring-one"></span>
-                  <span class="orb-ring ring-two"></span>
-                </div>
-
-                <strong>Biometric capture</strong>
-                <span>Open the camera, keep one face centered and blink once. Capture happens automatically right after verification.</span>
-
-                <div class="camera-tips">
-                  <span><i class="pi pi-sun"></i> Good lighting</span>
-                  <span><i class="pi pi-user"></i> One face</span>
-                  <span><i class="pi pi-eye"></i> Natural blink</span>
-                </div>
-              </div>
-
-              <div class="camera-buttons">
-                <button
-                  pButton
-                  type="button"
-                  icon="pi pi-camera"
-                  label="Open Camera"
-                  class="primary-button"
-                  (click)="openCamera()"
-                  pTooltip="Open Camera">
-                </button>
-
-                <button
-                  pButton
-                  type="button"
-                  icon="pi pi-shield"
-                  [label]="blob ? 'Captured Securely' : 'Auto Capture After Blink'"
-                  class="secondary-button"
-                  disabled>
-                </button>
-              </div>
-            </div>
-
-            <div
-              class="captured-image"
-              [class.verified-preview]="livenessPassed">
-
-              <div class="image-title">
-                <div>
-                  <i class="pi pi-image"></i>
-                  Face preview
-                </div>
-
-                <span class="preview-state" [class.preview-ready]="!!blob">
-                  {{ blob ? 'Captured' : 'Live preview' }}
-                </span>
-              </div>
-
-              <div class="preview-frame">
-                <canvas #canvasElement class="face-canvas"></canvas>
-                <div class="preview-grid"></div>
-                <div class="preview-corners">
-                  <span></span><span></span><span></span><span></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div class="form-footer">
-          <div class="required-info">
-            <i class="pi pi-info-circle"></i>
-            <span><b>*</b> Required fields &nbsp;•&nbsp; Face enrollment is recommended for recognition.</span>
-          </div>
-
-          <button
-            pButton
-            type="submit"
-            icon="pi pi-user-plus"
-            label="Create Patient"
-            class="submit-button">
-          </button>
         </div>
 
-        <video
-          #videoElement
-          width="640"
-          height="480"
-          style="display:none;">
-        </video>
-      </form>
-    </div>
+        <div class="form-grid">
+
+          <div class="field">
+            <label>
+              Full Name
+              <b>*</b>
+            </label>
+
+            <div class="input-shell">
+              <i class="pi pi-user"></i>
+
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="patientData.name"
+                name="name"
+                placeholder="e.g. Mohamed Ebrahim"
+                required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>
+              Date of Birth
+              <b>*</b>
+            </label>
+
+            <div class="input-shell">
+              <i class="pi pi-calendar"></i>
+
+              <input
+                type="date"
+                [(ngModel)]="dob"
+                (change)="onDateChange($event)"
+                name="dob"
+                required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>
+              Mobile Number
+              <b>*</b>
+            </label>
+
+            <div class="input-shell">
+              <i class="pi pi-phone"></i>
+
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="patientData.mobileno"
+                name="mobileNo"
+                placeholder="Enter mobile number"
+                required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>
+              National Number
+              <b>*</b>
+            </label>
+
+            <div class="input-shell">
+              <i class="pi pi-id-card"></i>
+
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="patientData.nationalno"
+                name="nationalNo"
+                placeholder="Enter national number"
+                required />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="profile-tip">
+          <i class="pi pi-info-circle"></i>
+
+          <span>
+            Accurate patient information improves verification and
+            record management.
+          </span>
+        </div>
+
+      </section>
+
+      <!-- FACE -->
+      <section class="premium-card biometric-card">
+
+        <div class="card-heading">
+
+          <div class="heading-icon face-icon">
+            <i class="pi pi-camera"></i>
+          </div>
+
+          <div>
+            <span class="section-kicker">BIOMETRIC PROFILE</span>
+            <h3>Live Face Enrollment</h3>
+            <p>
+              Capture and verify a live face for secure
+              identification.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="verification-bar"
+             [class.verified]="livenessPassed || !!blob">
+
+          <div class="verify-icon">
+            <i class="pi"
+               [class.pi-shield]="!livenessPassed && !blob"
+               [class.pi-check-circle]="livenessPassed || !!blob">
+            </i>
+          </div>
+
+          <div>
+            <strong>
+              {{
+                blob
+                  ? 'Face captured securely'
+                  : livenessPassed
+                    ? 'Human verified'
+                    : 'Live verification required'
+              }}
+            </strong>
+
+            <span>{{ livenessMessage }}</span>
+          </div>
+
+          <div class="verification-dot"></div>
+
+        </div>
+
+        <div class="capture-preview">
+
+          <div class="canvas-shell">
+
+            <canvas
+              #canvasElement
+              class="face-canvas">
+            </canvas>
+
+            <div class="canvas-overlay">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <div
+              class="preview-label"
+              [class.ready]="!!blob">
+
+              <i class="pi"
+                 [class.pi-camera]="!blob"
+                 [class.pi-check]="!!blob">
+              </i>
+
+              {{ blob ? 'Verified capture' : 'Camera preview' }}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="capture-help">
+
+          <div>
+            <i class="pi pi-sun"></i>
+            <span>
+              <strong>Good Lighting</strong>
+              <small>Keep the face clearly visible</small>
+            </span>
+          </div>
+
+          <div>
+            <i class="pi pi-user"></i>
+            <span>
+              <strong>One Person</strong>
+              <small>No additional faces</small>
+            </span>
+          </div>
+
+          <div>
+            <i class="pi pi-eye"></i>
+            <span>
+              <strong>Blink Naturally</strong>
+              <small>Capture starts automatically</small>
+            </span>
+          </div>
+
+        </div>
+
+        <button
+          pButton
+          type="button"
+          icon="pi pi-camera"
+          [label]="blob ? 'Capture Again' : 'Open Camera'"
+          class="camera-button"
+          (click)="openCamera()">
+        </button>
+
+      </section>
+
+      <footer class="form-footer">
+
+        <div class="footer-note">
+          <i class="pi pi-shield"></i>
+
+          <span>
+            Patient information and biometric capture are handled
+            through the secure enrollment workflow.
+          </span>
+        </div>
+
+        <button
+          pButton
+          type="submit"
+          icon="pi pi-user-plus"
+          label="Create Patient"
+          class="save-button">
+        </button>
+
+      </footer>
+
+      <video
+        #videoElement
+        width="640"
+        height="480"
+        style="display:none;">
+      </video>
+
+    </form>
+
   </div>
+
 </div>
 
 <p-dialog
@@ -280,13 +354,14 @@
   [style]="{ width: '400px' }">
 
   <ng-template pTemplate="header">
-    <div class="dialog-header error-header">
+    <div class="dialog-title error-title">
       <i class="pi pi-exclamation-circle"></i>
       Error
     </div>
   </ng-template>
 
-  <div class="dialog-message error-message">
+  <div class="dialog-content error-content">
     {{ errorMessage }}
   </div>
+
 </p-dialog>

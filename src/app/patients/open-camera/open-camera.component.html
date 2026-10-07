@@ -1,162 +1,235 @@
-<div class="camera-popup" [class.is-verified]="livenessPassed">
-  <div class="ambient-orb orb-one"></div>
-  <div class="ambient-orb orb-two"></div>
+<div class="recognition-shell" [class.verified]="livenessPassed">
 
-  <div class="camera-header">
-    <div class="header-left">
-      <div class="header-icon">
-        <i class="pi pi-scan"></i>
-      </div>
+  <div class="decor decor-one"></div>
+  <div class="decor decor-two"></div>
 
-      <div class="header-copy">
-        <span class="eyebrow">Secure biometric check</span>
-        <h3>Face Recognition</h3>
-        <p>Center your face and blink once. The verified live face is captured and recognized immediately.</p>
-      </div>
+  <div class="recognition-header">
+    <div>
+      <span class="page-kicker">FACE RECOGNITION</span>
+      <h2>Identify <em>Patient</em></h2>
+      <p>
+        Look at the camera and complete the live verification
+        to securely identify the matching patient.
+      </p>
     </div>
 
-    <div class="live-pill">
-      <span class="live-dot"></span>
-      Live camera
+    <div class="live-chip">
+      <span></span>
+      Camera Live
     </div>
   </div>
 
-  <div class="step-strip">
-    <div class="step-item active">
-      <span class="step-number">1</span>
-      <div>
-        <strong>Face</strong>
-        <small>Keep one face visible</small>
-      </div>
-    </div>
+  <div class="recognition-grid">
 
-    <div class="step-connector" [class.complete]="livenessPassed"></div>
+    <!-- LEFT -->
+    <div class="process-panel">
 
-    <div class="step-item" [class.complete]="livenessPassed">
-      <span class="step-number">
-        <i class="pi" [class.pi-check]="livenessPassed" [class.pi-eye]="!livenessPassed"></i>
-      </span>
-      <div>
-        <strong>Liveness</strong>
-        <small>{{ livenessPassed ? 'Blink verified' : 'Blink once naturally' }}</small>
-      </div>
-    </div>
+      <span class="panel-label">VERIFICATION FLOW</span>
 
-    <div class="step-connector" [class.complete]="livenessPassed"></div>
+      <div class="process-step active">
+        <div class="step-circle">1</div>
 
-    <div class="step-item" [class.complete]="livenessPassed">
-      <span class="step-number">3</span>
-      <div>
-        <strong>Match</strong>
-        <small>Auto recognition</small>
-      </div>
-    </div>
-  </div>
-
-  <div class="video-card">
-    <div class="video-toolbar">
-      <div class="video-title">
-        <span class="camera-status-dot"></span>
-        Front camera
-      </div>
-
-      <div class="secure-label">
-        <i class="pi pi-lock"></i>
-        Secure session
-      </div>
-    </div>
-
-    <div class="video-container">
-      <video
-        #videoElement
-        autoplay
-        playsinline>
-      </video>
-
-      <canvas
-        #canvasElement
-        class="overlay-canvas">
-      </canvas>
-
-      <div class="face-guide">
-        <div class="face-frame" [class.verified-frame]="livenessPassed">
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-          <span class="scan-line"></span>
+        <div>
+          <strong>Face Detection</strong>
+          <small>Keep one face visible</small>
         </div>
       </div>
 
-      <div class="camera-hint">
-        <i class="pi pi-arrows-alt"></i>
-        Keep your face centered
+      <div class="process-line"
+           [class.done]="livenessPassed">
+      </div>
+
+      <div class="process-step"
+           [class.complete]="livenessPassed">
+        <div class="step-circle">
+          <i class="pi"
+             [class.pi-eye]="!livenessPassed"
+             [class.pi-check]="livenessPassed">
+          </i>
+        </div>
+
+        <div>
+          <strong>Liveness Check</strong>
+          <small>
+            {{ livenessPassed ? 'Human verified' : 'Blink when prompted' }}
+          </small>
+        </div>
+      </div>
+
+      <div class="process-line"
+           [class.done]="livenessPassed">
+      </div>
+
+      <div class="process-step"
+           [class.complete]="livenessPassed">
+        <div class="step-circle">3</div>
+
+        <div>
+          <strong>Find Match</strong>
+          <small>Automatic patient identification</small>
+        </div>
+      </div>
+
+      <div class="security-note">
+        <div class="security-icon">
+          <i class="pi pi-shield"></i>
+        </div>
+
+        <div>
+          <strong>Secure biometric session</strong>
+          <span>
+            Recognition begins automatically after successful
+            live verification.
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CAMERA -->
+    <div class="camera-stage">
+
+      <div class="camera-topbar">
+        <div class="camera-live">
+          <span></span>
+          LIVE
+        </div>
+
+        <div class="camera-state">
+          <i class="pi pi-lock"></i>
+          Protected
+        </div>
+      </div>
+
+      <div class="video-wrapper">
+
+        <video
+          #videoElement
+          autoplay
+          playsinline>
+        </video>
+
+        <canvas
+          #canvasElement
+          class="overlay-canvas">
+        </canvas>
+
+        <div class="face-guide">
+          <span class="corner top-left"></span>
+          <span class="corner top-right"></span>
+          <span class="corner bottom-left"></span>
+          <span class="corner bottom-right"></span>
+
+          <div class="scan-line"></div>
+        </div>
+
+        <div class="camera-message">
+          <i class="pi"
+             [class.pi-eye]="!livenessPassed"
+             [class.pi-check-circle]="livenessPassed">
+          </i>
+
+          {{ livenessPassed
+              ? 'Live face verified'
+              : 'Keep your face centered' }}
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="guidance-panel">
+
+      <div
+        class="verification-card"
+        [class.success]="livenessPassed">
+
+        <div class="verification-icon">
+          <i class="pi"
+             [class.pi-shield]="!livenessPassed"
+             [class.pi-check-circle]="livenessPassed">
+          </i>
+        </div>
+
+        <div>
+          <span class="mini-label">
+            {{ livenessPassed ? 'VERIFIED' : 'LIVENESS' }}
+          </span>
+
+          <strong>
+            {{ livenessPassed
+              ? 'Human Verified'
+              : 'Verification Active' }}
+          </strong>
+
+          <p>{{ livenessMessage }}</p>
+        </div>
+      </div>
+
+      <div class="guidance-card">
+        <span class="panel-label">BEST RESULTS</span>
+
+        <div class="guide-item">
+          <div><i class="pi pi-sun"></i></div>
+
+          <span>
+            <strong>Good lighting</strong>
+            <small>Keep your face clearly visible</small>
+          </span>
+        </div>
+
+        <div class="guide-item">
+          <div><i class="pi pi-user"></i></div>
+
+          <span>
+            <strong>One person only</strong>
+            <small>No additional faces in frame</small>
+          </span>
+        </div>
+
+        <div class="guide-item">
+          <div><i class="pi pi-eye"></i></div>
+
+          <span>
+            <strong>Blink naturally</strong>
+            <small>The system detects live movement</small>
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="recognition-footer">
+
+    <div class="footer-status">
+      <span class="pulse-dot"></span>
+
+      <div>
+        <strong>
+          {{ livenessPassed
+              ? 'Recognition in progress'
+              : 'Waiting for verification' }}
+        </strong>
+
+        <small>
+          {{ livenessMessage }}
+        </small>
       </div>
     </div>
-  </div>
 
-  <div
-    class="liveness-status"
-    [class.liveness-success]="livenessPassed">
-
-    <div
-      class="status-icon"
-      [class.success-icon]="livenessPassed">
-      <i
-        class="pi"
-        [class.pi-eye]="!livenessPassed"
-        [class.pi-check-circle]="livenessPassed">
-      </i>
-    </div>
-
-    <div class="status-content">
-      <span class="status-label" [class.success-label]="livenessPassed">
-        {{ livenessPassed ? 'Verification successful' : 'Liveness check in progress' }}
-      </span>
-
-      <span class="status-message" [class.success-message]="livenessPassed">
-        {{ livenessMessage }}
-      </span>
-    </div>
-
-    <div class="status-badge" [class.success-badge]="livenessPassed">
-      {{ livenessPassed ? 'READY' : 'LIVE' }}
-    </div>
-  </div>
-
-  <div class="camera-help">
-    <div class="tip-item">
-      <i class="pi pi-sun"></i>
-      <span>Use good lighting</span>
-    </div>
-
-    <div class="tip-item">
-      <i class="pi pi-user"></i>
-      <span>One person only</span>
-    </div>
-
-    <div class="tip-item">
-      <i class="pi pi-eye"></i>
-      <span>Blink naturally</span>
-    </div>
-  </div>
-
-  <div class="button-container">
     <button
       type="button"
-      class="cancel-button"
+      class="cancel-btn"
       (click)="stopCameraAndRedirect()">
+
       <i class="pi pi-times"></i>
       Cancel
+
     </button>
 
-    <button
-      type="button"
-      class="capture-button"
-      disabled>
-      <span class="button-glow"></span>
-      <i class="pi pi-shield"></i>
-      Auto Detect After Blink
-    </button>
   </div>
+
 </div>
